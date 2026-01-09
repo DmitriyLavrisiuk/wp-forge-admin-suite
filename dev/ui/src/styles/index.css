@@ -37,6 +37,7 @@
   }
 
   #forge-admin-suite-root {
-    min-height: 100vh;
+    max-height: calc(100vh - 32px);
+    height: calc(100vh - 32px);
   }
 }

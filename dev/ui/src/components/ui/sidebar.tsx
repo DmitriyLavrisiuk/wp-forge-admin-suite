@@ -72,7 +72,7 @@ export function Sidebar({
     <aside
       data-collapsed={isCollapsed ? "true" : "false"}
       className={cn(
-        "group/sidebar flex h-screen w-[--sidebar-width] flex-col border-r bg-background transition-[width] duration-200 ease-out",
+        "group/sidebar flex w-[--sidebar-width] flex-col border-r bg-background transition-[width] duration-200 ease-out",
         isCollapsed && "w-[--sidebar-width-collapsed]",
         className
       )}
@@ -96,7 +96,7 @@ export const SidebarContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex-1 overflow-auto px-2 py-2", className)}
+    className={cn("flex-1 h-max overflow-auto px-2 py-2", className)}
     {...props}
   />
 ));
@@ -200,7 +200,7 @@ export const SidebarInset = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex min-h-screen flex-1 flex-col bg-muted/40", className)}
+    className={cn("flex flex-1 flex-col bg-muted/40", className)}
     {...props}
   />
 ));
