@@ -34,6 +34,7 @@ export default function HelloPage() {
       setResponse(data);
       toast.success("Статус получен");
     } catch (error) {
+      console.error(error);
       setResponse(null);
       toast.error("Не удалось получить статус");
     } finally {
