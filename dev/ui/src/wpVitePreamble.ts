@@ -1,3 +1,4 @@
+// @ts-expect-error Vite virtual module resolved at runtime.
 import RefreshRuntime from "/@react-refresh";
 
 RefreshRuntime.injectIntoGlobalHook(window);
