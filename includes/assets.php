@@ -66,6 +66,8 @@ final class Forge_Admin_Suite_Assets {
 			return;
 		}
 
+		$this->enqueue_admin_overrides();
+
 		$origin = $this->detect_vite_origin();
 		if ( $origin ) {
 			$this->enqueue_dev_assets( $origin );
@@ -79,6 +81,16 @@ final class Forge_Admin_Suite_Assets {
 		}
 
 		$this->notice_message = __( 'Forge Admin Suite assets not found. Start the Vite dev server or run pnpm -C dev/ui build.', 'forge-admin-suite' );
+	}
+
+	/**
+	 * Enqueue admin-only overrides for the plugin page.
+	 *
+	 * @return void
+	 */
+	private function enqueue_admin_overrides() {
+		$style_url = FORGE_ADMIN_SUITE_PLUGIN_URL . 'assets/admin.css';
+		wp_enqueue_style( 'forge-admin-suite-admin', $style_url, array(), FORGE_ADMIN_SUITE_VERSION );
 	}
 
 	/**

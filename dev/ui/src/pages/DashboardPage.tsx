@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Button from "../components/ui/button";
+import { apiGet } from "../lib/api";
 
 export default function DashboardPage() {
   const [response, setResponse] = useState<Record<string, unknown> | null>(
@@ -17,20 +18,9 @@ export default function DashboardPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(
-        `${window.forgeAdminSuite.restUrl}forge-admin-suite/v1/status`,
-        {
-          headers: {
-            "X-WP-Nonce": window.forgeAdminSuite.nonce,
-          },
-        }
+      const data = await apiGet<Record<string, unknown>>(
+        "forge-admin-suite/v1/status"
       );
-
-      if (!res.ok) {
-        throw new Error("Status request failed");
-      }
-
-      const data = (await res.json()) as Record<string, unknown>;
       setResponse(data);
       toast.success("Статус получен");
     } catch (error) {
@@ -43,7 +33,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-[60vh] shadow-sm">
+    <div className="min-h-[10vh]">
       <div className="mb-6">
         <p className="text-sm text-slate-600">
           Версия плагина: {window.forgeAdminSuite?.version ?? "—"}

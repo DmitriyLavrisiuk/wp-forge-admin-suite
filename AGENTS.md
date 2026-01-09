@@ -37,12 +37,11 @@
 - If manifest/assets are missing, do not fatal; show an admin notice instead.
 
 ## Output Requirements
-- When asked to change code, produce complete file contents (no partial snippets).
-- List changed files at the top of the response.
+- When asked to change code, output only: (1) list of changed files and (2) unified git diff.
+- Do not print full file contents or additional sections.
 
 ## Response Format
-- Keep the 5 core sections for responses.
-- Allow an optional "Version Status" subsection inside the last section (or a short extra bullet) when helpful.
+- Output only the changed files list followed by the unified git diff.
 
 ## Versioning & Release Management
 - The assistant owns semantic versioning (SemVer) for this plugin.

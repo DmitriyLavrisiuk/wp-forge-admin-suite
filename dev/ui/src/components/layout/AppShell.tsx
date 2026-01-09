@@ -1,7 +1,8 @@
 import { type ReactNode } from "react";
+import AppSidebar from "./AppSidebar";
+import { SidebarInset, SidebarProvider } from "../ui/sidebar";
 import AppFooter from "./AppFooter";
 import AppHeader from "./AppHeader";
-import AppSidebar from "./AppSidebar";
 
 type AppShellProps = {
   children: ReactNode;
@@ -9,13 +10,15 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="grid min-h-screen grid-cols-[260px_1fr] grid-rows-[56px_1fr_48px]">
+    <SidebarProvider>
+      <div className="flex w-full bg-background min-h-[calc(100vh-32px)]">
         <AppSidebar />
-        <AppHeader />
-        <main className="px-6 py-6">{children}</main>
-        <AppFooter />
+        <SidebarInset>
+          <AppHeader />
+          <main className="flex-1 h-full px-6 py-6">{children}</main>
+          <AppFooter />
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
