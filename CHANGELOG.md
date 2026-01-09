@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+- Added shadcn/ui setup for Vite React UI.
+- Added shadcn-based sidebar shell with header trigger and routes-driven nav.
+
 ## 0.1.5
 - Redesign admin layout with grid shell, sidebar, and nav components.
 

@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { routes } from "../../app/routes";
+import { SidebarTrigger } from "../ui/sidebar";
 
 export default function AppHeader() {
   const location = useLocation();
@@ -7,9 +8,10 @@ export default function AppHeader() {
   const title = currentRoute?.pageTitle ?? "";
 
   return (
-    <header className="border-b border-slate-200 px-6">
-      <div className="flex h-14 items-center justify-start">
-        <h2 className="text-base font-normal text-gray-600">{title}</h2>
+    <header className="border-b border-border px-4">
+      <div className="flex h-14 items-center gap-3">
+        <SidebarTrigger />
+        <h2 className="text-sm font-medium text-foreground">{title}</h2>
       </div>
     </header>
   );
