@@ -43,12 +43,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-[60vh] rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="min-h-[60vh] shadow-sm">
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-slate-900">
-          Универсальная Админ Панель
-        </h2>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="text-sm text-slate-600">
           Версия плагина: {window.forgeAdminSuite?.version ?? "—"}
         </p>
       </div>

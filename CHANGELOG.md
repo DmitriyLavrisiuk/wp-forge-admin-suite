@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.5
+- Redesign admin layout with grid shell, sidebar, and nav components.
+
 ## 0.1.4
 - Add admin layout with sidebar and settings stub.
 
