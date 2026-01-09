@@ -1,0 +1,17 @@
+{
+  "src/frontend.ts": {
+    "file": "assets/frontend-l0sNRNKZ.js",
+    "name": "frontend",
+    "src": "src/frontend.ts",
+    "isEntry": true
+  },
+  "src/main.tsx": {
+    "file": "assets/admin-Cx7NGM2e.js",
+    "name": "admin",
+    "src": "src/main.tsx",
+    "isEntry": true,
+    "css": [
+      "assets/admin-DqH0sbFx.css"
+    ]
+  }
+}
