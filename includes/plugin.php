@@ -87,5 +87,34 @@ final class Forge_Admin_Suite_Plugin {
 		);
 
 		$this->assets->set_hook_suffix( $this->hook_suffix );
+		add_action( 'load-' . $this->hook_suffix, array( $this, 'register_footer_filters' ) );
+	}
+
+	/**
+	 * Register footer filters for the plugin admin screen.
+	 *
+	 * @return void
+	 */
+	public function register_footer_filters() {
+		add_filter( 'admin_footer_text', array( $this, 'filter_admin_footer_text' ) );
+		add_filter( 'update_footer', array( $this, 'filter_update_footer_text' ), 11 );
+	}
+
+	/**
+	 * Filter the admin footer text for the plugin screen.
+	 *
+	 * @return string
+	 */
+	public function filter_admin_footer_text() {
+		return '';
+	}
+
+	/**
+	 * Filter the update footer text for the plugin screen.
+	 *
+	 * @return string
+	 */
+	public function filter_update_footer_text() {
+		return '';
 	}
 }
