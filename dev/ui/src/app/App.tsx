@@ -1,13 +1,18 @@
 import { Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
-import HelloPage from "../pages/HelloPage";
+import AdminLayout from "../components/layout/AdminLayout";
+import DashboardPage from "../pages/DashboardPage";
+import SettingsPage from "../pages/SettingsPage";
 
 export default function App() {
   return (
     <>
-      <Routes>
-        <Route path="/" element={<HelloPage />} />
-      </Routes>
+      <AdminLayout>
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Routes>
+      </AdminLayout>
       <Toaster position="top-right" richColors />
     </>
   );

@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.4
+- Add admin layout with sidebar and settings stub.
+
 ## 0.1.3
 - Add UI linting and formatting tooling.
 - Switched ESLint to v9 + flat config.
