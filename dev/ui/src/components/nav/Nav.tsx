@@ -6,9 +6,9 @@ export default function Nav() {
 
   return (
     <nav>
-      <ul className="space-y-1">
+      <ul>
         {navRoutes.map((route) => (
-          <li key={route.path}>
+          <li key={route.path} className="m-3">
             <NavItem to={route.path} label={route.navLabel ?? route.pageTitle} />
           </li>
         ))}
