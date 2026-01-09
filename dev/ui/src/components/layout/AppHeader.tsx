@@ -7,8 +7,8 @@ export default function AppHeader() {
   const title = currentRoute?.pageTitle ?? "";
 
   return (
-    <header className="border-b border-border px-4">
-      <div className="flex h-14 items-center gap-3">
+    <header className="p-0 m-0 border-b max-h-14 h-14 box-border flex items-center">
+      <div className="flex items-center w-full px-4 gap-3">
         <h2 className="text-sm font-medium text-foreground">{title}</h2>
       </div>
     </header>

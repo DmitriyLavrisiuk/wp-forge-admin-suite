@@ -86,7 +86,7 @@ export const SidebarHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("px-2 py-2", className)} {...props} />
+  <div ref={ref} className={cn("p-0 m-0", className)} {...props} />
 ));
 SidebarHeader.displayName = "SidebarHeader";
 
@@ -106,7 +106,7 @@ export const SidebarFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("px-2 py-2", className)} {...props} />
+  <div ref={ref} className={cn("p-0 m-0", className)} {...props} />
 ));
 SidebarFooter.displayName = "SidebarFooter";
 
@@ -114,7 +114,7 @@ export const SidebarGroup = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("space-y-2", className)} {...props} />
+  <div ref={ref} className={cn("space-y-2 w-full text-sm", className)} {...props} />
 ));
 SidebarGroup.displayName = "SidebarGroup";
 
@@ -125,7 +125,7 @@ export const SidebarGroupLabel = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground",
+      "px-2 text-xs font-semibold tracking-wide text-muted-foreground h-8 flex items-center",
       className
     )}
     {...props}
@@ -158,7 +158,7 @@ export const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem";
 
 const sidebarMenuButtonVariants = cva(
-  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+  "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors",
   {
     variants: {
       isActive: {

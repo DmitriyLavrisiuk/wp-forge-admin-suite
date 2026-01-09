@@ -79,7 +79,7 @@ final class Forge_Admin_Suite_Plugin {
 	public function register_menu() {
 		$this->hook_suffix = add_menu_page(
 			__( 'Универсальная Админ Панель', 'forge-admin-suite' ),
-			__( 'Универсальная Админ Панель', 'forge-admin-suite' ),
+			__( 'FAS', 'forge-admin-suite' ),
 			'manage_options',
 			'forge-admin-suite',
 			array( $this->admin_page, 'render' ),

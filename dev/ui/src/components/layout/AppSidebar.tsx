@@ -16,13 +16,14 @@ import {
 export default function AppSidebar() {
   const location = useLocation();
   const navRoutes = routes.filter((route) => route.showInNav !== false);
+  const version = window.forgeAdminSuite?.version ?? "0.1.6";
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-4 py-3">
-        <div className="text-sm font-semibold text-foreground">
+      <SidebarHeader className="border-b max-h-14 h-14 box-border flex items-center">
+        <p className="flex items-center w-full px-4 gap-3 text-sm font-semibold text-foreground">
           Forge Admin Suite
-        </div>
+        </p>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -38,7 +39,7 @@ export default function AppSidebar() {
                     <SidebarMenuButton asChild isActive={isActive}>
                       <NavLink
                         to={route.path}
-                        className="flex w-full items-center gap-2"
+                        className="flex w-full items-center gap-2 focus:shadow-none"
                       >
                         <Icon className="h-4 w-4" />
                         <span className="truncate">
@@ -53,8 +54,10 @@ export default function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t px-4 py-3 text-xs text-muted-foreground">
-        Forge Admin Suite
+      <SidebarFooter className="border-t max-h-14 h-14 box-border flex items-center">
+        <div className="flex items-center w-full px-4 gap-3 text-xs text-muted-foreground">
+          Forge Admin Suite v.{version}
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
