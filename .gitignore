@@ -5,3 +5,6 @@ node_modules/
 .dev-cache-tailwind/
 .dev-cache-typescript/
 .DS_Store
+dev/ui/.vite/
+dev/ui/node_modules/
+dev/ui/dist/

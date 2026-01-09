@@ -78,7 +78,7 @@ final class Forge_Admin_Suite_Assets {
 			return;
 		}
 
-		$this->notice_message = __( 'Forge Admin Suite assets not found. Start the Vite dev server or run pnpm build in dev/ui.', 'forge-admin-suite' );
+		$this->notice_message = __( 'Forge Admin Suite assets not found. Start the Vite dev server or run pnpm -C dev/ui build.', 'forge-admin-suite' );
 	}
 
 	/**
@@ -139,22 +139,25 @@ final class Forge_Admin_Suite_Assets {
 	 */
 	private function detect_vite_origin() {
 		$should_recheck = $this->should_recheck_origin();
+		$cached_origin  = get_transient( FORGE_ADMIN_SUITE_VITE_ORIGIN_TRANSIENT );
 
-		if ( ! $should_recheck ) {
-			$cached_origin = get_transient( FORGE_ADMIN_SUITE_VITE_ORIGIN_TRANSIENT );
-			if ( is_string( $cached_origin ) && $cached_origin ) {
-				if ( $this->probe_vite_origin( $cached_origin ) ) {
-					return $cached_origin;
-				}
-
-				delete_transient( FORGE_ADMIN_SUITE_VITE_ORIGIN_TRANSIENT );
+		if ( ! $should_recheck && is_string( $cached_origin ) && $cached_origin ) {
+			if ( $this->probe_vite_origin( $cached_origin ) ) {
+				return $cached_origin;
 			}
+
+			delete_transient( FORGE_ADMIN_SUITE_VITE_ORIGIN_TRANSIENT );
+			return '';
 		}
 
-		$origins = array(
-			'http://127.0.0.1:5173',
-			'http://localhost:5173',
+		$origins = array_filter(
+			array(
+				is_string( $cached_origin ) && $cached_origin ? $cached_origin : null,
+				'http://127.0.0.1:5173',
+				'http://localhost:5173',
+			)
 		);
+		$origins = array_values( array_unique( $origins ) );
 
 		foreach ( $origins as $origin ) {
 			if ( $this->probe_vite_origin( $origin ) ) {
@@ -197,6 +200,7 @@ final class Forge_Admin_Suite_Assets {
 				'timeout'     => 0.3,
 				'redirection' => 0,
 				'sslverify'   => false,
+				'user-agent'  => 'ForgeAdminSuite/' . FORGE_ADMIN_SUITE_VERSION . '; ' . home_url(),
 			)
 		);
 
