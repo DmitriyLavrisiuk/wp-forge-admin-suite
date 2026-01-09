@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import DashboardPage from "../pages/DashboardPage";
 import SettingsPage from "../pages/SettingsPage";
 
@@ -5,20 +6,23 @@ export type AppRoute = {
   path: string;
   navLabel?: string;
   pageTitle: string;
-  element: JSX.Element;
+  Component: ComponentType;
+  showInNav?: boolean;
 };
 
-export const appRoutes: AppRoute[] = [
+export const routes: AppRoute[] = [
   {
     path: "/",
     navLabel: "Dashboard",
     pageTitle: "Дашборд",
-    element: <DashboardPage />,
+    Component: DashboardPage,
+    showInNav: true,
   },
   {
     path: "/settings",
     navLabel: "Settings",
     pageTitle: "Настройки",
-    element: <SettingsPage />,
+    Component: SettingsPage,
+    showInNav: true,
   },
 ];

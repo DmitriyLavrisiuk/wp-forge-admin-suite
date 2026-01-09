@@ -1,9 +1,9 @@
 import { useLocation } from "react-router-dom";
-import { appRoutes } from "../../app/routes";
+import { routes } from "../../app/routes";
 
 export default function MainHeader() {
   const location = useLocation();
-  const currentRoute = appRoutes.find((route) => route.path === location.pathname);
+  const currentRoute = routes.find((route) => route.path === location.pathname);
   const title = currentRoute?.pageTitle ?? "";
 
   return (

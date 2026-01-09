@@ -1,8 +1,8 @@
-import { appRoutes } from "../../app/routes";
+import { routes } from "../../app/routes";
 import NavItem from "./NavItem";
 
 export default function Nav() {
-  const navRoutes = appRoutes.filter((route) => route.navLabel);
+  const navRoutes = routes.filter((route) => route.showInNav !== false);
 
   return (
     <nav>
