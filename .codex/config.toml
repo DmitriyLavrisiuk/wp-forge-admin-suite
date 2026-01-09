@@ -1,0 +1,28 @@
+# Project-only Codex config for forge-admin-suite
+
+[project]
+name = "forge-admin-suite"
+
+[defaults]
+mode = "STRICT"
+
+# Optional MCP servers (commented out; enable if available)
+# [mcp_servers.wordpress_docs]
+# command = "wordpress-docs-mcp"
+# args = []
+#
+# [mcp_servers.vite]
+# command = "vite-docs-mcp"
+# args = []
+#
+# [mcp_servers.react]
+# command = "react-docs-mcp"
+# args = []
+#
+# [mcp_servers.tailwind]
+# command = "tailwind-docs-mcp"
+# args = []
+#
+# [mcp_servers.shadcn_ui]
+# command = "shadcn-ui-mcp"
+# args = []
