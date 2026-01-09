@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import Button from "../components/ui/button";
 
-export default function HelloPage() {
+export default function DashboardPage() {
   const [response, setResponse] = useState<Record<string, unknown> | null>(
     null
   );
