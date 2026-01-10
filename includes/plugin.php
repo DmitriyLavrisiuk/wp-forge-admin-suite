@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/admin-page.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/assets.php';
+require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/canonical.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/rest.php';
 
 /**
@@ -30,6 +31,13 @@ final class Forge_Admin_Suite_Plugin {
 	 * @var Forge_Admin_Suite_Rest
 	 */
 	private $rest;
+
+	/**
+	 * Canonical handler.
+	 *
+	 * @var Forge_Admin_Suite_Canonical
+	 */
+	private $canonical;
 
 	/**
 	 * Admin page handler.
@@ -63,12 +71,14 @@ final class Forge_Admin_Suite_Plugin {
 	private function register() {
 		$this->assets     = new Forge_Admin_Suite_Assets();
 		$this->rest       = new Forge_Admin_Suite_Rest();
+		$this->canonical  = new Forge_Admin_Suite_Canonical();
 		$this->admin_page = new Forge_Admin_Suite_Admin_Page();
 
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 
 		$this->assets->register();
 		$this->rest->register();
+		$this->canonical->register();
 	}
 
 	/**
