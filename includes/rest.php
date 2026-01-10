@@ -37,6 +37,26 @@ final class Forge_Admin_Suite_Rest {
 				'permission_callback' => array( $this, 'check_permissions' ),
 			)
 		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/settings',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_settings' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/settings',
+			array(
+				'methods'             => WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'update_settings' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
 	}
 
 	/**
@@ -85,6 +105,37 @@ final class Forge_Admin_Suite_Rest {
 				'id'   => (int) $user->ID,
 				'name' => sanitize_text_field( $user->display_name ),
 			),
+		);
+
+		return rest_ensure_response( $response );
+	}
+
+	/**
+	 * Return settings payload.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function get_settings( $request ) {
+		$response = array(
+			'canonicalOrigin' => Forge_Admin_Suite_Settings::get_canonical_origin(),
+		);
+
+		return rest_ensure_response( $response );
+	}
+
+	/**
+	 * Update settings payload.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function update_settings( $request ) {
+		$canonical_origin = $request->get_param( 'canonicalOrigin' );
+		$stored_origin    = Forge_Admin_Suite_Settings::update_canonical_origin( $canonical_origin );
+
+		$response = array(
+			'canonicalOrigin' => $stored_origin,
 		);
 
 		return rest_ensure_response( $response );
