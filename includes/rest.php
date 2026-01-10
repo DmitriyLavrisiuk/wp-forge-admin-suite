@@ -9,8 +9,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/canonical.php';
-
 /**
  * REST API handler.
  */
@@ -37,23 +35,6 @@ final class Forge_Admin_Suite_Rest {
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_status' ),
 				'permission_callback' => array( $this, 'check_permissions' ),
-			)
-		);
-
-		register_rest_route(
-			'forge-admin-suite/v1',
-			'/canonical/settings',
-			array(
-				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( $this, 'get_canonical_settings' ),
-					'permission_callback' => array( $this, 'check_permissions' ),
-				),
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( $this, 'update_canonical_settings' ),
-					'permission_callback' => array( $this, 'check_permissions' ),
-				),
 			)
 		);
 	}
@@ -107,37 +88,5 @@ final class Forge_Admin_Suite_Rest {
 		);
 
 		return rest_ensure_response( $response );
-	}
-
-	/**
-	 * Return canonical settings.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response
-	 */
-	public function get_canonical_settings( $request ) {
-		$canonical = new Forge_Admin_Suite_Canonical();
-		$settings  = $canonical->get_settings();
-
-		return rest_ensure_response( $settings );
-	}
-
-	/**
-	 * Update canonical settings.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response
-	 */
-	public function update_canonical_settings( $request ) {
-		$canonical = new Forge_Admin_Suite_Canonical();
-		$payload   = $request->get_json_params();
-
-		if ( ! is_array( $payload ) ) {
-			$payload = array();
-		}
-
-		$settings = $canonical->update_settings( $payload );
-
-		return rest_ensure_response( $settings );
 	}
 }
