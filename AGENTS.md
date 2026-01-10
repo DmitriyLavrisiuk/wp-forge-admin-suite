@@ -36,6 +36,23 @@
 - Enqueue scripts/styles only on the plugin admin page.
 - If manifest/assets are missing, do not fatal; show an admin notice instead.
 
+## Output policy
+- Default response MUST include:
+  - Short summary (max ~6 bullets)
+  - Changed files list
+  - Unified git diff
+- Never output full file contents unless explicitly asked.
+- If total diff is large (e.g. > 250 lines), DO NOT print the full diff; instead output:
+  - Changed files list
+  - `git diff --stat`
+  - Concise per-file summary
+  - Exact local commands to inspect details (`git diff`, `git show`, `git diff <file>`).
+
+## UI components rule
+- All form/controls must use shadcn/ui components (Button, Input, Select, Checkbox, Switch, RadioGroup, Textarea, Label, Tooltip, Dialog, DropdownMenu, etc.).
+- Do not use native `<select>` or custom-built form controls in pages/features; only via `src/components/ui` (shadcn).
+- If a needed shadcn component is missing, add it under `src/components/ui` following shadcn patterns.
+
 ## Output Requirements
 - When asked to change code, output only: (1) list of changed files and (2) unified git diff.
 - Do not print full file contents or additional sections.
