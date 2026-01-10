@@ -76,12 +76,14 @@ final class Forge_Admin_Suite_Rest {
 		$user = wp_get_current_user();
 
 		$response = array(
-			'ok'      => true,
-			'version' => FORGE_ADMIN_SUITE_VERSION,
-			'time'    => current_time( 'mysql' ),
-			'user'    => array(
+			'ok'            => true,
+			'pluginVersion' => FORGE_ADMIN_SUITE_VERSION,
+			'wpVersion'     => sanitize_text_field( get_bloginfo( 'version' ) ),
+			'phpVersion'    => sanitize_text_field( PHP_VERSION ),
+			'serverTime'    => sanitize_text_field( current_time( 'c' ) ),
+			'user'          => array(
 				'id'   => (int) $user->ID,
-				'name' => $user->display_name,
+				'name' => sanitize_text_field( $user->display_name ),
 			),
 		);
 

@@ -22,7 +22,10 @@ export async function apiGet<T>(path: string): Promise<T> {
   });
 
   if (!res.ok) {
-    throw new Error("Request failed.");
+    const message = res.statusText
+      ? `Request failed: ${res.status} ${res.statusText}.`
+      : `Request failed: ${res.status}.`;
+    throw new Error(message);
   }
 
   return (await res.json()) as T;

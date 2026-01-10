@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Button from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { apiGet } from "../lib/api";
 
 export default function DashboardPage() {
@@ -10,11 +17,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCheck = async () => {
-    if (!window.forgeAdminSuite) {
-      toast.error("Конфигурация не найдена");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -24,9 +26,11 @@ export default function DashboardPage() {
       setResponse(data);
       toast.success("Статус получен");
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Не удалось получить статус";
       console.error(error);
       setResponse(null);
-      toast.error("Не удалось получить статус");
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -34,23 +38,24 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-[10vh]">
-      <div className="mb-6">
-        <p className="text-sm text-slate-600">
-          Версия плагина: {window.forgeAdminSuite?.version ?? "—"}
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={handleCheck} disabled={isLoading}>
-          {isLoading ? "Проверка..." : "Check status"}
-        </Button>
-      </div>
-
-      <div className="mt-6 rounded-xl bg-slate-900 p-4 text-sm text-slate-100">
-        <pre className="whitespace-pre-wrap">
-          {response ? JSON.stringify(response, null, 2) : "Нет данных"}
-        </pre>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Статус</CardTitle>
+          <CardDescription>Проверка состояния REST API.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={handleCheck} disabled={isLoading}>
+              {isLoading ? "Checking..." : "Check status"}
+            </Button>
+          </div>
+          <div className="rounded-lg border border-border bg-muted/40 p-4 text-xs text-foreground">
+            <pre className="whitespace-pre-wrap">
+              {response ? JSON.stringify(response, null, 2) : "Нет данных"}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

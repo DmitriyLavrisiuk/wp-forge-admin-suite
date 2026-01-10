@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.7
+- Added REST status endpoint and dashboard status card.
+
 ## 0.1.6
 - Added shadcn/ui setup for Vite React UI.
 - Added shadcn-based sidebar shell with header trigger and routes-driven nav.
