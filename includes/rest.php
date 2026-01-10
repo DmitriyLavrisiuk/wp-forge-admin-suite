@@ -132,10 +132,16 @@ final class Forge_Admin_Suite_Rest {
 	 */
 	public function update_settings( $request ) {
 		$canonical_origin = $request->get_param( 'canonicalOrigin' );
-		$stored_origin    = Forge_Admin_Suite_Settings::update_canonical_origin( $canonical_origin );
+		$validated_origin = forge_admin_suite_validate_origin( $canonical_origin );
+
+		if ( is_wp_error( $validated_origin ) ) {
+			return $validated_origin;
+		}
+
+		update_option( Forge_Admin_Suite_Settings::CANONICAL_ORIGIN_OPTION, $validated_origin );
 
 		$response = array(
-			'canonicalOrigin' => $stored_origin,
+			'canonicalOrigin' => $validated_origin,
 		);
 
 		return rest_ensure_response( $response );

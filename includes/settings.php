@@ -55,34 +55,82 @@ final class Forge_Admin_Suite_Settings {
 	 * @return string
 	 */
 	public static function sanitize_canonical_origin( $origin ) {
-		$origin = is_string( $origin ) ? trim( sanitize_text_field( $origin ) ) : '';
-
-		if ( '' === $origin ) {
+		$validated = forge_admin_suite_validate_origin( $origin );
+		if ( is_wp_error( $validated ) ) {
 			return '';
 		}
 
-		if ( false === strpos( $origin, '://' ) ) {
-			$origin = 'https://' . $origin;
-		}
-
-		$parts = wp_parse_url( $origin );
-		if ( empty( $parts['host'] ) ) {
-			return '';
-		}
-
-		$scheme = isset( $parts['scheme'] ) ? strtolower( $parts['scheme'] ) : 'https';
-		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
-			$scheme = 'https';
-		}
-
-		$host = strtolower( $parts['host'] );
-		$port = isset( $parts['port'] ) ? (int) $parts['port'] : 0;
-
-		$normalized = $scheme . '://' . $host;
-		if ( $port ) {
-			$normalized .= ':' . $port;
-		}
-
-		return $normalized;
+		return $validated;
 	}
+}
+
+/**
+ * Validate and normalize canonical origin.
+ *
+ * @param string $input Origin input.
+ * @return string|WP_Error
+ */
+function forge_admin_suite_validate_origin( $input ) {
+	$origin = is_string( $input ) ? trim( sanitize_text_field( $input ) ) : '';
+
+	if ( '' === $origin ) {
+		return '';
+	}
+
+	if ( false === strpos( $origin, '://' ) ) {
+		$origin = 'https://' . $origin;
+	}
+
+	$parts = wp_parse_url( $origin );
+	if ( empty( $parts['host'] ) ) {
+		return new WP_Error(
+			'forge_admin_suite_invalid_origin',
+			__( 'Canonical origin must be a valid absolute URL (scheme + host).', 'forge-admin-suite' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$scheme = isset( $parts['scheme'] ) ? strtolower( $parts['scheme'] ) : 'https';
+	if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+		return new WP_Error(
+			'forge_admin_suite_invalid_origin',
+			__( 'Canonical origin must use http or https.', 'forge-admin-suite' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$host = strtolower( $parts['host'] );
+	if ( preg_match( '/[^a-z0-9.-]/', $host ) || false !== strpos( $host, '..' ) || '.' === $host[0] || '.' === substr( $host, -1 ) ) {
+		return new WP_Error(
+			'forge_admin_suite_invalid_origin',
+			__( 'Canonical origin host is invalid.', 'forge-admin-suite' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$is_localhost = 'localhost' === $host;
+	$is_loc       = str_ends_with( $host, '.loc' );
+	$has_tld      = false;
+
+	if ( false !== strpos( $host, '.' ) ) {
+		$labels = explode( '.', $host );
+		$tld    = end( $labels );
+		$has_tld = is_string( $tld ) && strlen( $tld ) >= 2;
+	}
+
+	if ( ! $is_localhost && ! $is_loc && ! $has_tld ) {
+		return new WP_Error(
+			'forge_admin_suite_invalid_origin',
+			__( 'Canonical origin must include a valid domain, .loc, or localhost.', 'forge-admin-suite' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$port       = isset( $parts['port'] ) ? (int) $parts['port'] : 0;
+	$normalized = $scheme . '://' . $host;
+	if ( $port > 0 ) {
+		$normalized .= ':' . $port;
+	}
+
+	return untrailingslashit( $normalized );
 }

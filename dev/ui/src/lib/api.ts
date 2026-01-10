@@ -52,9 +52,17 @@ export async function apiPost<T>(
   });
 
   if (!res.ok) {
-    const message = res.statusText
+    let message = res.statusText
       ? `Request failed: ${res.status} ${res.statusText}.`
       : `Request failed: ${res.status}.`;
+    try {
+      const data = (await res.json()) as { message?: string };
+      if (data?.message) {
+        message = data.message;
+      }
+    } catch (error) {
+      console.error(error);
+    }
     throw new Error(message);
   }
 
