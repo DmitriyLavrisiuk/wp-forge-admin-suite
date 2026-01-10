@@ -1,7 +1,7 @@
 # Changelog
 
-## 0.1.8
-- Added canonical backend core, Yoast override, and settings REST endpoints.
+## 0.1.10
+- Roll back to v0.1.7 baseline and remove Canonical Manager WIP.
 
 ## 0.1.7
 - Added REST status endpoint and dashboard status card.
