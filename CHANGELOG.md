@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.12
+- Added Unique Canonical Rules module with per-entity overrides (higher priority than General).
+- Added DataTable UI + edit modal.
+
 ## 0.1.11
 - Added REST status endpoint + dashboard status card.
 - Added global canonical domain override + settings page.

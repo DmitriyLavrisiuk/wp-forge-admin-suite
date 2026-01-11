@@ -61,13 +61,15 @@ final class Forge_Admin_Suite_General_Canonical_Rules {
 			return;
 		}
 
-		$origin = Forge_Admin_Suite_Settings::get_canonical_origin();
-		if ( '' === $origin ) {
+		$unique_rule = $this->get_unique_rule_for_request();
+		$origin      = Forge_Admin_Suite_Settings::get_canonical_origin();
+
+		if ( ! $unique_rule && '' === $origin ) {
 			echo $head_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			return;
 		}
 
-		echo $this->rewrite_head_canonical( $head_html, $origin ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->rewrite_head_canonical( $head_html, $origin, $unique_rule ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
@@ -96,9 +98,10 @@ final class Forge_Admin_Suite_General_Canonical_Rules {
 	 *
 	 * @param string $head_html Head HTML.
 	 * @param string $origin Canonical origin.
+	 * @param array|null $unique_rule Unique canonical rule.
 	 * @return string
 	 */
-	private function rewrite_head_canonical( $head_html, $origin ) {
+	private function rewrite_head_canonical( $head_html, $origin, $unique_rule ) {
 		$canonical_href = '';
 		$pattern        = '#<link\b[^>]*\brel=(["\'])canonical\1[^>]*>\s*#i';
 
@@ -125,7 +128,15 @@ final class Forge_Admin_Suite_General_Canonical_Rules {
 			$canonical_href = $this->get_fallback_canonical();
 		}
 
-		$new_canonical = $this->build_canonical_from_origin( $canonical_href, $origin );
+		if ( $unique_rule ) {
+			$new_canonical = $this->build_unique_canonical(
+				$canonical_href,
+				$unique_rule['baseUrl'],
+				$unique_rule['preserveDefaultPath']
+			);
+		} else {
+			$new_canonical = $this->build_canonical_from_origin( $canonical_href, $origin );
+		}
 		if ( '' === $new_canonical ) {
 			return $head_html;
 		}
@@ -183,6 +194,138 @@ final class Forge_Admin_Suite_General_Canonical_Rules {
 		}
 
 		return untrailingslashit( $origin ) . $path . $query;
+	}
+
+	/**
+	 * Build canonical URL from unique rule.
+	 *
+	 * @param string $source_url Source canonical URL.
+	 * @param string $base_url Base URL.
+	 * @param bool   $preserve_default_path Preserve default path flag.
+	 * @return string
+	 */
+	private function build_unique_canonical( $source_url, $base_url, $preserve_default_path ) {
+		$base_parts = wp_parse_url( $base_url );
+		if ( empty( $base_parts['host'] ) ) {
+			return '';
+		}
+
+		$base_origin = $base_parts['scheme'] . '://' . $base_parts['host'];
+		if ( isset( $base_parts['port'] ) ) {
+			$base_origin .= ':' . (int) $base_parts['port'];
+		}
+
+		$base_path = isset( $base_parts['path'] ) ? $base_parts['path'] : '/';
+		$base_path = '/' . ltrim( $base_path, '/' );
+
+		if ( '/' !== $base_path && '/' !== substr( $base_path, -1 ) ) {
+			$base_path .= '/';
+		}
+
+		if ( ! $preserve_default_path ) {
+			return $base_origin . $base_path;
+		}
+
+		$source_parts = wp_parse_url( $source_url );
+		$path         = isset( $source_parts['path'] ) ? $source_parts['path'] : '';
+
+		if ( '' === $path ) {
+			$path = '/';
+		} elseif ( '/' !== $path[0] ) {
+			$path = '/' . ltrim( $path, '/' );
+		}
+
+		$query = '';
+		if ( isset( $source_parts['query'] ) && '' !== $source_parts['query'] ) {
+			$query = '?' . $source_parts['query'];
+		}
+
+		return $base_origin . $this->join_paths( $base_path, $path ) . $query;
+	}
+
+	/**
+	 * Join two URL paths.
+	 *
+	 * @param string $base_path Base path.
+	 * @param string $append_path Append path.
+	 * @return string
+	 */
+	private function join_paths( $base_path, $append_path ) {
+		$base_path   = '/' . trim( $base_path, '/' );
+		$append_path = '/' . ltrim( $append_path, '/' );
+
+		if ( '/' === $base_path ) {
+			return $append_path;
+		}
+
+		return rtrim( $base_path, '/' ) . $append_path;
+	}
+
+	/**
+	 * Get unique canonical rule for current request.
+	 *
+	 * @return array|null
+	 */
+	private function get_unique_rule_for_request() {
+		if ( ! is_singular() ) {
+			return null;
+		}
+
+		$post_id = (int) get_queried_object_id();
+		if ( $post_id <= 0 ) {
+			return null;
+		}
+
+		if ( ! $this->is_unique_canonical_post( $post_id ) ) {
+			return null;
+		}
+
+		return $this->get_unique_rule_for_post( $post_id );
+	}
+
+	/**
+	 * Check if a post supports unique canonical rules.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return bool
+	 */
+	private function is_unique_canonical_post( $post_id ) {
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return false;
+		}
+
+		if ( 'attachment' === $post->post_type ) {
+			return false;
+		}
+
+		$type = get_post_type_object( $post->post_type );
+		if ( ! $type || ! $type->public || ! $type->publicly_queryable ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Get unique canonical rule for a post.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array|null
+	 */
+	private function get_unique_rule_for_post( $post_id ) {
+		$base_url = get_post_meta( $post_id, Forge_Admin_Suite_Settings::UNIQUE_CANONICAL_BASE_URL_META, true );
+		if ( ! is_string( $base_url ) || '' === $base_url ) {
+			return null;
+		}
+
+		$preserve = get_post_meta( $post_id, Forge_Admin_Suite_Settings::UNIQUE_CANONICAL_PRESERVE_PATH_META, true );
+		$preserve = '' === $preserve ? true : (bool) $preserve;
+
+		return array(
+			'baseUrl'             => $base_url,
+			'preserveDefaultPath' => $preserve,
+		);
 	}
 
 	/**

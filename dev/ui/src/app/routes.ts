@@ -1,9 +1,10 @@
 import type { ComponentType } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Globe, Home, Settings } from "lucide-react";
+import { Globe, Home, ListChecks, Settings } from "lucide-react";
 import DashboardPage from "../pages/DashboardPage";
 import GeneralCanonicalRulesPage from "../pages/GeneralCanonicalRulesPage";
 import SettingsPage from "../pages/SettingsPage";
+import UniqueCanonicalRulesPage from "../pages/UniqueCanonicalRulesPage";
 
 export type AppRoute = {
   path: string;
@@ -37,6 +38,14 @@ export const routes: AppRoute[] = [
     pageTitle: "General Canonical Rules",
     Component: GeneralCanonicalRulesPage,
     icon: Globe,
+    showInNav: true,
+  },
+  {
+    path: "/unique-canonical",
+    navLabel: "Unique Canonical Rules",
+    pageTitle: "Unique Canonical Rules",
+    Component: UniqueCanonicalRulesPage,
+    icon: ListChecks,
     showInNav: true,
   },
 ];

@@ -68,3 +68,34 @@ export async function apiPost<T>(
 
   return (await res.json()) as T;
 }
+
+export async function apiDelete(path: string): Promise<void> {
+  const config = getConfig();
+
+  if (!config) {
+    throw new Error("Forge admin suite config missing.");
+  }
+
+  const normalizedPath = path.replace(/^\//, "");
+  const res = await fetch(`${config.restUrl}${normalizedPath}`, {
+    method: "DELETE",
+    headers: {
+      "X-WP-Nonce": config.nonce,
+    },
+  });
+
+  if (!res.ok) {
+    let message = res.statusText
+      ? `Request failed: ${res.status} ${res.statusText}.`
+      : `Request failed: ${res.status}.`;
+    try {
+      const data = (await res.json()) as { message?: string };
+      if (data?.message) {
+        message = data.message;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    throw new Error(message);
+  }
+}
