@@ -295,16 +295,16 @@ final class Forge_Admin_Suite_General_Canonical_Rules {
 			return false;
 		}
 
+		if ( function_exists( 'forge_admin_suite_is_supported_post_type' ) ) {
+			return forge_admin_suite_is_supported_post_type( $post->post_type );
+		}
+
 		if ( 'attachment' === $post->post_type ) {
 			return false;
 		}
 
 		$type = get_post_type_object( $post->post_type );
-		if ( ! $type || ! $type->public || ! $type->publicly_queryable ) {
-			return false;
-		}
-
-		return true;
+		return (bool) ( $type && $type->public && $type->publicly_queryable );
 	}
 
 	/**
