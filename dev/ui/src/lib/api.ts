@@ -30,3 +30,41 @@ export async function apiGet<T>(path: string): Promise<T> {
 
   return (await res.json()) as T;
 }
+
+export async function apiPost<T>(
+  path: string,
+  body: Record<string, unknown>
+): Promise<T> {
+  const config = getConfig();
+
+  if (!config) {
+    throw new Error("Forge admin suite config missing.");
+  }
+
+  const normalizedPath = path.replace(/^\//, "");
+  const res = await fetch(`${config.restUrl}${normalizedPath}`, {
+    method: "POST",
+    headers: {
+      "X-WP-Nonce": config.nonce,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    let message = res.statusText
+      ? `Request failed: ${res.status} ${res.statusText}.`
+      : `Request failed: ${res.status}.`;
+    try {
+      const data = (await res.json()) as { message?: string };
+      if (data?.message) {
+        message = data.message;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    throw new Error(message);
+  }
+
+  return (await res.json()) as T;
+}

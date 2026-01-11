@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.11
+- Added REST status endpoint + dashboard status card.
+- Added global canonical domain override + settings page.
+
 ## 0.1.10
 - Roll back to v0.1.7 baseline and remove Canonical Manager WIP.
 
