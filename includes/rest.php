@@ -83,6 +83,26 @@ final class Forge_Admin_Suite_Rest {
 
 		register_rest_route(
 			'forge-admin-suite/v1',
+			'/general-link-tags/alternate-links',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_general_alternate_links' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/general-link-tags/alternate-links',
+			array(
+				'methods'             => WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'update_general_alternate_links' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
 			'/unique-link-tags/entities',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -270,6 +290,45 @@ final class Forge_Admin_Suite_Rest {
 		);
 
 		return rest_ensure_response( $response );
+	}
+
+	/**
+	 * Return general alternate links payload.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response
+	 */
+	public function get_general_alternate_links( $request ) {
+		$items = Forge_Admin_Suite_Settings::get_general_alternate_links();
+
+		return rest_ensure_response(
+			array(
+				'items' => $items,
+			)
+		);
+	}
+
+	/**
+	 * Update general alternate links payload.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function update_general_alternate_links( $request ) {
+		$items     = $request->get_param( 'items' );
+		$validated = forge_admin_suite_validate_alternate_links_payload( $items );
+
+		if ( is_wp_error( $validated ) ) {
+			return $validated;
+		}
+
+		update_option( Forge_Admin_Suite_Settings::GENERAL_ALTERNATE_LINKS_OPTION, $validated, false );
+
+		return rest_ensure_response(
+			array(
+				'items' => $validated,
+			)
+		);
 	}
 
 	/**
