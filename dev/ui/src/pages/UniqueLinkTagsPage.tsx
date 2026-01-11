@@ -62,7 +62,7 @@ type UniqueCanonicalResponse = {
 
 const DEFAULT_PER_PAGE = 50;
 
-export default function UniqueCanonicalRulesPage() {
+export default function UniqueLinkTagsPage() {
   const [items, setItems] = useState<UniqueCanonicalEntity[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -143,7 +143,7 @@ export default function UniqueCanonicalRulesPage() {
     setIsLoading(true);
     try {
       const data = await apiGet<UniqueCanonicalResponse>(
-        `forge-admin-suite/v1/unique-canonical/entities?page=${page}&per_page=${perPage}&search=${encodeURIComponent(search)}`
+        `forge-admin-suite/v1/unique-link-tags/entities?page=${page}&per_page=${perPage}&search=${encodeURIComponent(search)}`
       );
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
@@ -203,7 +203,7 @@ export default function UniqueCanonicalRulesPage() {
     setIsSaving(true);
     try {
       await apiPost<{ rule: UniqueCanonicalRule | null }>(
-        `forge-admin-suite/v1/unique-canonical/rule/${selected.id}`,
+        `forge-admin-suite/v1/unique-link-tags/rule/${selected.id}`,
         {
           baseUrl,
           preserveDefaultPath,
@@ -230,7 +230,7 @@ export default function UniqueCanonicalRulesPage() {
     setIsDeleting(true);
     try {
       await apiDelete(
-        `forge-admin-suite/v1/unique-canonical/rule/${pendingDelete.id}`
+        `forge-admin-suite/v1/unique-link-tags/rule/${pendingDelete.id}`
       );
       toast.success("Правило удалено");
       setIsConfirmOpen(false);
@@ -251,7 +251,7 @@ export default function UniqueCanonicalRulesPage() {
     <div className="min-h-[10vh] space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">Unique Canonical Rules</h3>
+          <h3 className="text-lg font-semibold">Unique Link Tags</h3>
           <p className="text-sm text-muted-foreground">
             Уникальные правила для отдельных записей с приоритетом выше общих.
           </p>
@@ -418,9 +418,9 @@ export default function UniqueCanonicalRulesPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Unique Canonical Rules</DialogTitle>
+            <DialogTitle>Unique Link Tags</DialogTitle>
             <DialogDescription>
-              Настройте уникальный canonical для выбранной записи.
+              Настройте уникальный link tag для выбранной записи.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -494,7 +494,7 @@ export default function UniqueCanonicalRulesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Удалить правило</AlertDialogTitle>
             <AlertDialogDescription>
-              Вы уверены, что хотите удалить уникальный canonical для этой записи?
+              Вы уверены, что хотите удалить уникальный link tag для этой записи?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">

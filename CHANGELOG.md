@@ -1,7 +1,10 @@
 # Changelog
 
+## 0.1.13
+- Rename Canonical modules to Link Tags modules (prep for alternate hreflang feature).
+
 ## 0.1.12
-- Added Unique Canonical Rules module with per-entity overrides (higher priority than General).
+- Added Unique Link Tags module with per-entity overrides (higher priority than General).
 - Added DataTable UI + edit modal.
 
 ## 0.1.11

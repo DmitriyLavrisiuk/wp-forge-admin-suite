@@ -16,7 +16,7 @@ type SettingsResponse = {
   canonicalOrigin: string;
 };
 
-export default function GeneralCanonicalRulesPage() {
+export default function GeneralLinkTagsPage() {
   const [canonicalOrigin, setCanonicalOrigin] = useState("");
   const [originError, setOriginError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +29,7 @@ export default function GeneralCanonicalRulesPage() {
       setIsLoading(true);
       try {
         const data = await apiGet<SettingsResponse>(
-          "forge-admin-suite/v1/settings"
+          "forge-admin-suite/v1/general-link-tags/settings"
         );
         if (isActive) {
           setCanonicalOrigin(data.canonicalOrigin ?? "");
@@ -116,7 +116,7 @@ export default function GeneralCanonicalRulesPage() {
     setIsSaving(true);
     try {
       const data = await apiPost<SettingsResponse>(
-        "forge-admin-suite/v1/settings",
+        "forge-admin-suite/v1/general-link-tags/settings",
         {
           canonicalOrigin,
         }
@@ -138,9 +138,9 @@ export default function GeneralCanonicalRulesPage() {
     <div className="min-h-[10vh]">
       <Card>
         <CardHeader>
-          <CardTitle>General Canonical Rules</CardTitle>
+          <CardTitle>General Link Tags</CardTitle>
           <CardDescription>
-            General Canonical Rules заменяет схему и домен всех canonical URL на
+            General Link Tags заменяет схему и домен всех canonical URL на
             указанный домен.
           </CardDescription>
         </CardHeader>

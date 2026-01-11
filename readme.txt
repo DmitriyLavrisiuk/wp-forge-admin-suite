@@ -4,7 +4,7 @@ Tags: admin, react, vite
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 0.1.12
+Stable tag: 0.1.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,8 +18,11 @@ Provides an admin-only React application scaffold with a REST status endpoint.
 2. Activate the plugin through the Plugins menu in WordPress.
 
 == Changelog ==
+= 0.1.13 =
+* Rename Canonical modules to Link Tags modules (prep for alternate hreflang feature).
+
 = 0.1.12 =
-* Added Unique Canonical Rules module with per-entity overrides (higher priority than General).
+* Added Unique Link Tags module with per-entity overrides (higher priority than General).
 * Added DataTable UI + edit modal.
 
 = 0.1.11 =

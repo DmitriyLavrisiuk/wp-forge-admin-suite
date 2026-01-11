@@ -63,6 +63,67 @@ final class Forge_Admin_Suite_Rest {
 
 		register_rest_route(
 			'forge-admin-suite/v1',
+			'/general-link-tags/settings',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_settings' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/general-link-tags/settings',
+			array(
+				'methods'             => WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'update_settings' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/unique-link-tags/entities',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_unique_canonical_entities' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/unique-link-tags/rule/(?P<id>\\d+)',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_unique_canonical_rule' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/unique-link-tags/rule/(?P<id>\\d+)',
+			array(
+				'methods'             => WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'update_unique_canonical_rule' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/unique-link-tags/rule/(?P<id>\\d+)',
+			array(
+				'methods'             => WP_REST_Server::DELETABLE,
+				'callback'            => array( $this, 'delete_unique_canonical_rule' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		// Deprecated canonical routes for backward compatibility in 0.1.13.
+		register_rest_route(
+			'forge-admin-suite/v1',
 			'/settings',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -194,6 +255,7 @@ final class Forge_Admin_Suite_Rest {
 	 * @return WP_REST_Response
 	 */
 	public function update_settings( $request ) {
+		// TODO: migrate canonical origin storage keys when Link Tags settings expand.
 		$canonical_origin = $request->get_param( 'canonicalOrigin' );
 		$validated_origin = forge_admin_suite_validate_origin( $canonical_origin );
 
@@ -328,6 +390,7 @@ final class Forge_Admin_Suite_Rest {
 			);
 		}
 
+		// TODO: migrate unique canonical meta keys when Link Tags storage expands.
 		update_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_CANONICAL_BASE_URL_META, $base_url );
 		update_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_CANONICAL_PRESERVE_PATH_META, $preserve ? '1' : '0' );
 
