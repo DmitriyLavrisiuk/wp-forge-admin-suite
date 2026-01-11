@@ -208,6 +208,8 @@ final class Forge_Admin_Suite_Rest {
 		);
 		unset( $post_types['attachment'] );
 		$post_types = array_values( $post_types );
+		$post_types = array_merge( array( 'post', 'page' ), $post_types );
+		$post_types = array_values( array_unique( $post_types ) );
 
 		$query = new WP_Query(
 			array(

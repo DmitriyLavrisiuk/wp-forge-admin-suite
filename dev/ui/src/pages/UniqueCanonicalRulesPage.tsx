@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "../components/ui/button";
@@ -12,6 +12,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 import Input from "../components/ui/input";
 import Label from "../components/ui/label";
 import {
@@ -62,12 +70,16 @@ export default function UniqueCanonicalRulesPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selected, setSelected] = useState<UniqueCanonicalEntity | null>(null);
+  const [pendingDelete, setPendingDelete] =
+    useState<UniqueCanonicalEntity | null>(null);
   const [baseUrl, setBaseUrl] = useState("");
   const [preserveDefaultPath, setPreserveDefaultPath] = useState(true);
   const [baseUrlError, setBaseUrlError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const loadErrorRef = useRef<string>("");
 
   const perPage = DEFAULT_PER_PAGE;
 
@@ -135,13 +147,17 @@ export default function UniqueCanonicalRulesPage() {
       );
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
+      loadErrorRef.current = "";
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Не удалось загрузить список";
       console.error(error);
-      toast.error(message);
+      if (loadErrorRef.current !== message) {
+        toast.error(message);
+        loadErrorRef.current = message;
+      }
     } finally {
       setIsLoading(false);
     }
@@ -165,6 +181,11 @@ export default function UniqueCanonicalRulesPage() {
     setBaseUrl("");
     setPreserveDefaultPath(true);
     setBaseUrlError("");
+  };
+
+  const openDeleteConfirm = (entity: UniqueCanonicalEntity) => {
+    setPendingDelete(entity);
+    setIsConfirmOpen(true);
   };
 
   const handleSave = async () => {
@@ -201,15 +222,19 @@ export default function UniqueCanonicalRulesPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selected) {
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) {
       return;
     }
 
     setIsDeleting(true);
     try {
-      await apiDelete(`forge-admin-suite/v1/unique-canonical/rule/${selected.id}`);
+      await apiDelete(
+        `forge-admin-suite/v1/unique-canonical/rule/${pendingDelete.id}`
+      );
       toast.success("Правило удалено");
+      setIsConfirmOpen(false);
+      setPendingDelete(null);
       closeDialog();
       loadEntities();
     } catch (error) {
@@ -309,7 +334,7 @@ export default function UniqueCanonicalRulesPage() {
                         <TooltipTrigger>
                           <Button
                             type="button"
-                            className="h-8 w-8 bg-muted text-foreground hover:bg-muted/70"
+                            className="p-2"
                             onClick={() => openDialog(entity)}
                             aria-label="Edit"
                           >
@@ -324,7 +349,7 @@ export default function UniqueCanonicalRulesPage() {
                         <TooltipTrigger>
                           <Button
                             type="button"
-                            className="h-8 w-8 bg-muted text-foreground hover:bg-muted/70"
+                            className="p-2 bg-primary text-secondary"
                             onClick={() =>
                               entity.viewLink &&
                               window.open(entity.viewLink, "_blank", "noopener")
@@ -344,8 +369,11 @@ export default function UniqueCanonicalRulesPage() {
                           <TooltipTrigger>
                             <Button
                               type="button"
-                              className="h-8 w-8 bg-muted text-foreground hover:bg-muted/70"
-                              onClick={() => openDialog(entity)}
+                              className="p-2 bg-red-400 text-foreground hover:bg-red-600/80"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openDeleteConfirm(entity);
+                              }}
                               aria-label="Clear"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -432,7 +460,11 @@ export default function UniqueCanonicalRulesPage() {
               <Button
                 type="button"
                 className="bg-muted text-foreground hover:bg-muted/70"
-                onClick={handleDelete}
+                onClick={() => {
+                  if (selected) {
+                    openDeleteConfirm(selected);
+                  }
+                }}
                 disabled={isSaving || isDeleting}
               >
                 {isDeleting ? "Удаление..." : "Удалить"}
@@ -448,6 +480,42 @@ export default function UniqueCanonicalRulesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={isConfirmOpen}
+        onOpenChange={(open: boolean) => {
+          setIsConfirmOpen(open);
+          if (!open) {
+            setPendingDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить правило</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите удалить уникальный canonical для этой записи?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6">
+            <Button
+              type="button"
+              className="bg-muted text-foreground hover:bg-muted/70"
+              onClick={() => setIsConfirmOpen(false)}
+              disabled={isDeleting}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Удаление..." : "Удалить"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
