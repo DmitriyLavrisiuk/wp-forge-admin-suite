@@ -10,6 +10,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Check whether a post type supports unique canonical rules.
+ *
+ * @param string $post_type Post type.
+ * @return bool
+ */
+function forge_admin_suite_is_supported_post_type( $post_type ) {
+	if ( 'attachment' === $post_type ) {
+		return false;
+	}
+
+	if ( 'post' === $post_type || 'page' === $post_type ) {
+		return true;
+	}
+
+	$object = get_post_type_object( $post_type );
+	if ( ! $object || ! $object->public || ! $object->publicly_queryable ) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
  * REST API handler.
  */
 final class Forge_Admin_Suite_Rest {
@@ -210,6 +233,7 @@ final class Forge_Admin_Suite_Rest {
 		$post_types = array_values( $post_types );
 		$post_types = array_merge( array( 'post', 'page' ), $post_types );
 		$post_types = array_values( array_unique( $post_types ) );
+		$post_types = array_values( array_filter( $post_types, 'forge_admin_suite_is_supported_post_type' ) );
 
 		$query = new WP_Query(
 			array(
@@ -382,16 +406,7 @@ final class Forge_Admin_Suite_Rest {
 	 * @return bool
 	 */
 	private function is_unique_canonical_post_type( $post_type ) {
-		if ( 'attachment' === $post_type ) {
-			return false;
-		}
-
-		$object = get_post_type_object( $post_type );
-		if ( ! $object || ! $object->public || ! $object->publicly_queryable ) {
-			return false;
-		}
-
-		return true;
+		return forge_admin_suite_is_supported_post_type( $post_type );
 	}
 
 	/**
