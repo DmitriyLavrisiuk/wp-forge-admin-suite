@@ -61,9 +61,11 @@ final class Forge_Admin_Suite_General_Link_Tags {
 			return;
 		}
 
-		$unique_rule     = $this->get_unique_rule_for_request();
-		$origin          = Forge_Admin_Suite_Settings::get_canonical_origin();
-		$alternate_links = Forge_Admin_Suite_Settings::get_general_alternate_links();
+		$unique_rule      = $this->get_unique_rule_for_request();
+		$origin           = Forge_Admin_Suite_Settings::get_canonical_origin();
+		$general_links    = Forge_Admin_Suite_Settings::get_general_alternate_links();
+		$unique_links     = $this->get_unique_alternate_links_for_request();
+		$alternate_links  = $this->merge_alternate_links( $general_links, $unique_links );
 
 		if ( ! $unique_rule && '' === $origin && empty( $alternate_links ) ) {
 			echo $head_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -158,6 +160,37 @@ final class Forge_Admin_Suite_General_Link_Tags {
 		}
 
 		return $canonical_tag . $alternate_tags . $head_html;
+	}
+
+	/**
+	 * Merge general and unique alternate links by hreflang.
+	 *
+	 * @param array $general_links General alternate links.
+	 * @param array $unique_links Unique alternate links.
+	 * @return array
+	 */
+	private function merge_alternate_links( $general_links, $unique_links ) {
+		$merged = array();
+
+		foreach ( $general_links as $item ) {
+			if ( ! is_array( $item ) || empty( $item['hreflang'] ) ) {
+				continue;
+			}
+
+			$hreflang = strtolower( (string) $item['hreflang'] );
+			$merged[ $hreflang ] = $item;
+		}
+
+		foreach ( $unique_links as $item ) {
+			if ( ! is_array( $item ) || empty( $item['hreflang'] ) ) {
+				continue;
+			}
+
+			$hreflang = strtolower( (string) $item['hreflang'] );
+			$merged[ $hreflang ] = $item;
+		}
+
+		return array_values( $merged );
 	}
 
 	/**
@@ -431,6 +464,33 @@ final class Forge_Admin_Suite_General_Link_Tags {
 		}
 
 		return $this->get_unique_rule_for_post( $post_id );
+	}
+
+	/**
+	 * Get unique alternate links for current request.
+	 *
+	 * @return array
+	 */
+	private function get_unique_alternate_links_for_request() {
+		if ( ! is_singular() ) {
+			return array();
+		}
+
+		$post_id = (int) get_queried_object_id();
+		if ( $post_id <= 0 ) {
+			return array();
+		}
+
+		if ( ! $this->is_unique_canonical_post( $post_id ) ) {
+			return array();
+		}
+
+		$items = get_post_meta( $post_id, Forge_Admin_Suite_Settings::UNIQUE_ALTERNATE_LINKS_META, true );
+		if ( function_exists( 'forge_admin_suite_sanitize_alternate_link_items' ) ) {
+			return forge_admin_suite_sanitize_alternate_link_items( $items );
+		}
+
+		return array();
 	}
 
 	/**

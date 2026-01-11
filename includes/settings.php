@@ -42,6 +42,13 @@ final class Forge_Admin_Suite_Settings {
 	const UNIQUE_CANONICAL_PRESERVE_PATH_META = 'forge_admin_suite_unique_canonical_preserve_path';
 
 	/**
+	 * Unique alternate links meta key.
+	 *
+	 * @var string
+	 */
+	const UNIQUE_ALTERNATE_LINKS_META = 'forge_admin_suite_unique_alternate_links';
+
+	/**
 	 * Get normalized canonical origin.
 	 *
 	 * @return string

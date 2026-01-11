@@ -141,6 +141,36 @@ final class Forge_Admin_Suite_Rest {
 			)
 		);
 
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/unique-link-tags/alternate-links/(?P<id>\\d+)',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_unique_alternate_links' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/unique-link-tags/alternate-links/(?P<id>\\d+)',
+			array(
+				'methods'             => WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'update_unique_alternate_links' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			'forge-admin-suite/v1',
+			'/unique-link-tags/alternate-links/(?P<id>\\d+)',
+			array(
+				'methods'             => WP_REST_Server::DELETABLE,
+				'callback'            => array( $this, 'delete_unique_alternate_links' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
 		// Deprecated canonical routes for backward compatibility in 0.1.13.
 		register_rest_route(
 			'forge-admin-suite/v1',
@@ -369,12 +399,19 @@ final class Forge_Admin_Suite_Rest {
 			)
 		);
 
+		$general_summary = $this->build_alternate_summary( Forge_Admin_Suite_Settings::get_general_alternate_links() );
+		if ( ! empty( $query->posts ) ) {
+			update_meta_cache( 'post', $query->posts );
+		}
+
 		$items = array();
 		foreach ( $query->posts as $post_id ) {
 			$post = get_post( $post_id );
 			if ( ! $post ) {
 				continue;
 			}
+
+			$unique_summary = $this->build_alternate_summary( $this->get_unique_alternate_links_for_post( $post_id ) );
 
 			$items[] = array(
 				'id'       => (int) $post_id,
@@ -383,6 +420,8 @@ final class Forge_Admin_Suite_Rest {
 				'editLink' => esc_url_raw( get_edit_post_link( $post_id, '' ) ),
 				'viewLink' => esc_url_raw( $this->get_unique_canonical_view_link( $post ) ),
 				'rule'     => $this->get_unique_canonical_rule_for_post( $post_id ),
+				'unique'   => $unique_summary,
+				'general'  => $general_summary,
 			);
 		}
 
@@ -477,10 +516,83 @@ final class Forge_Admin_Suite_Rest {
 
 		delete_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_CANONICAL_BASE_URL_META );
 		delete_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_CANONICAL_PRESERVE_PATH_META );
+		delete_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_ALTERNATE_LINKS_META );
 
 		return rest_ensure_response(
 			array(
 				'rule' => null,
+			)
+		);
+	}
+
+	/**
+	 * Return unique alternate links payload.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function get_unique_alternate_links( $request ) {
+		$post = $this->get_unique_canonical_post( $request );
+		if ( is_wp_error( $post ) ) {
+			return $post;
+		}
+
+		return rest_ensure_response(
+			array(
+				'items' => $this->get_unique_alternate_links_for_post( $post->ID ),
+			)
+		);
+	}
+
+	/**
+	 * Update unique alternate links payload.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function update_unique_alternate_links( $request ) {
+		$post = $this->get_unique_canonical_post( $request );
+		if ( is_wp_error( $post ) ) {
+			return $post;
+		}
+
+		$items     = $request->get_param( 'items' );
+		$validated = forge_admin_suite_validate_alternate_links_payload( $items );
+
+		if ( is_wp_error( $validated ) ) {
+			return $validated;
+		}
+
+		if ( empty( $validated ) ) {
+			delete_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_ALTERNATE_LINKS_META );
+		} else {
+			update_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_ALTERNATE_LINKS_META, $validated );
+		}
+
+		return rest_ensure_response(
+			array(
+				'items' => $validated,
+			)
+		);
+	}
+
+	/**
+	 * Delete unique alternate links payload.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function delete_unique_alternate_links( $request ) {
+		$post = $this->get_unique_canonical_post( $request );
+		if ( is_wp_error( $post ) ) {
+			return $post;
+		}
+
+		delete_post_meta( $post->ID, Forge_Admin_Suite_Settings::UNIQUE_ALTERNATE_LINKS_META );
+
+		return rest_ensure_response(
+			array(
+				'items' => array(),
 			)
 		);
 	}
@@ -549,6 +661,55 @@ final class Forge_Admin_Suite_Rest {
 		return array(
 			'baseUrl'             => $base_url,
 			'preserveDefaultPath' => $preserve,
+		);
+	}
+
+	/**
+	 * Get unique alternate links for a post.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array
+	 */
+	private function get_unique_alternate_links_for_post( $post_id ) {
+		$items = get_post_meta( $post_id, Forge_Admin_Suite_Settings::UNIQUE_ALTERNATE_LINKS_META, true );
+
+		if ( function_exists( 'forge_admin_suite_sanitize_alternate_link_items' ) ) {
+			return forge_admin_suite_sanitize_alternate_link_items( $items );
+		}
+
+		return array();
+	}
+
+	/**
+	 * Build alternate link summary.
+	 *
+	 * @param array $items Alternate items.
+	 * @return array|null
+	 */
+	private function build_alternate_summary( $items ) {
+		if ( empty( $items ) || ! is_array( $items ) ) {
+			return null;
+		}
+
+		$hreflangs = array();
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) || empty( $item['hreflang'] ) ) {
+				continue;
+			}
+
+			$hreflangs[] = sanitize_text_field( (string) $item['hreflang'] );
+		}
+
+		$hreflangs = array_values( array_unique( $hreflangs ) );
+		if ( empty( $hreflangs ) ) {
+			return null;
+		}
+
+		sort( $hreflangs );
+
+		return array(
+			'count'     => count( $hreflangs ),
+			'hreflangs' => $hreflangs,
 		);
 	}
 

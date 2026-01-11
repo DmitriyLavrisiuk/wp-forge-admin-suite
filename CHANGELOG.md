@@ -2,6 +2,8 @@
 
 ## 0.1.13
 - Rename Canonical modules to Link Tags modules (prep for alternate hreflang feature).
+- Added General Link Tags alternate (hreflang) links with global settings.
+- Added Unique Link Tags alternate (hreflang) overrides with per-entity merge.
 
 ## 0.1.12
 - Added Unique Link Tags module with per-entity overrides (higher priority than General).

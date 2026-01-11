@@ -6,12 +6,12 @@
     "isEntry": true
   },
   "src/main.tsx": {
-    "file": "assets/admin-9jWj1qqJ.js",
+    "file": "assets/admin-CJm5Swz5.js",
     "name": "admin",
     "src": "src/main.tsx",
     "isEntry": true,
     "css": [
-      "assets/admin-CttUy7nf.css"
+      "assets/admin-BcCpHOh8.css"
     ]
   }
 }

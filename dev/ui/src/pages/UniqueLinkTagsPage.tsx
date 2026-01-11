@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "../components/ui/button";
 import Badge from "../components/ui/badge";
@@ -44,6 +44,18 @@ type UniqueCanonicalRule = {
   preserveDefaultPath: boolean;
 };
 
+type AlternateItem = {
+  hreflang: string;
+  hrefBaseUrl: string;
+  preserveDefaultPath: boolean;
+  pathPrefix: string;
+};
+
+type AlternateSummary = {
+  count: number;
+  hreflangs: string[];
+};
+
 type UniqueCanonicalEntity = {
   id: number;
   type: string;
@@ -51,6 +63,8 @@ type UniqueCanonicalEntity = {
   editLink: string;
   viewLink: string;
   rule: UniqueCanonicalRule | null;
+  unique: AlternateSummary | null;
+  general: AlternateSummary | null;
 };
 
 type UniqueCanonicalResponse = {
@@ -77,6 +91,21 @@ export default function UniqueLinkTagsPage() {
   const [baseUrl, setBaseUrl] = useState("");
   const [preserveDefaultPath, setPreserveDefaultPath] = useState(true);
   const [baseUrlError, setBaseUrlError] = useState("");
+  const [alternateItems, setAlternateItems] = useState<AlternateItem[]>([]);
+  const [alternateForm, setAlternateForm] = useState<AlternateItem>({
+    hreflang: "",
+    hrefBaseUrl: "",
+    preserveDefaultPath: true,
+    pathPrefix: "",
+  });
+  const [alternateEditIndex, setAlternateEditIndex] = useState<number | null>(
+    null
+  );
+  const [alternateDeleteIndex, setAlternateDeleteIndex] = useState<number | null>(
+    null
+  );
+  const [isAlternateDeleteOpen, setIsAlternateDeleteOpen] = useState(false);
+  const [isAlternateLoading, setIsAlternateLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const loadErrorRef = useRef<string>("");
@@ -86,6 +115,63 @@ export default function UniqueLinkTagsPage() {
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(total / perPage));
   }, [total, perPage]);
+
+  const alternateValidation = useMemo(() => {
+    const errors = { hreflang: "", hrefBaseUrl: "", pathPrefix: "" };
+    const hreflang = normalizeHreflang(alternateForm.hreflang);
+
+    if (!hreflang) {
+      errors.hreflang = "Hreflang обязателен.";
+    } else if (
+      hreflang !== "x-default" &&
+      !/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(hreflang)
+    ) {
+      errors.hreflang = "Некорректный hreflang.";
+    }
+
+    const baseUrlResult = parseAlternateBaseUrl(alternateForm.hrefBaseUrl);
+    if (baseUrlResult.error) {
+      errors.hrefBaseUrl = baseUrlResult.error;
+    }
+
+    const allowPathPrefix = canUsePathPrefix(
+      alternateForm.preserveDefaultPath,
+      baseUrlResult.basePath,
+      baseUrlResult.normalized
+    );
+    let normalizedPathPrefix = "";
+
+    if (allowPathPrefix) {
+      normalizedPathPrefix = normalizePathPrefix(alternateForm.pathPrefix);
+      if (alternateForm.pathPrefix.trim() && !normalizedPathPrefix) {
+        errors.pathPrefix = 'Path prefix должен начинаться с "/".';
+      }
+    }
+
+    if (!errors.hreflang && hreflang) {
+      const hasDuplicate = alternateItems.some(
+        (item, index) => index !== alternateEditIndex && item.hreflang === hreflang
+      );
+      if (hasDuplicate) {
+        errors.hreflang = "Hreflang должен быть уникальным.";
+      }
+    }
+
+    const isValid =
+      !errors.hreflang && !errors.hrefBaseUrl && !errors.pathPrefix;
+
+    return {
+      errors,
+      allowPathPrefix,
+      isValid,
+      normalized: {
+        hreflang,
+        hrefBaseUrl: baseUrlResult.normalized,
+        preserveDefaultPath: alternateForm.preserveDefaultPath,
+        pathPrefix: allowPathPrefix ? normalizedPathPrefix : "",
+      },
+    };
+  }, [alternateEditIndex, alternateForm, alternateItems]);
 
   const validateBaseUrl = (value: string) => {
     const trimmed = value.trim();
@@ -139,6 +225,106 @@ export default function UniqueLinkTagsPage() {
     return { normalized, error: "" };
   };
 
+  const normalizeHreflang = (value: string) => value.trim().toLowerCase();
+
+  const parseAlternateBaseUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return { normalized: "", error: "URL обязателен.", basePath: "" };
+    }
+
+    const withScheme = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+
+    let url: URL;
+    try {
+      url = new URL(withScheme);
+    } catch {
+      return { normalized: "", error: "Введите корректный URL.", basePath: "" };
+    }
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return {
+        normalized: "",
+        error: "Разрешены только http или https.",
+        basePath: "",
+      };
+    }
+
+    const host = url.hostname.toLowerCase();
+    if (
+      !/^[a-z0-9.-]+$/.test(host) ||
+      host.includes("..") ||
+      host.startsWith(".") ||
+      host.endsWith(".")
+    ) {
+      return { normalized: "", error: "Некорректный домен.", basePath: "" };
+    }
+
+    const isLocalhost = host === "localhost";
+    const isLoc = host.endsWith(".loc");
+    const hasTld = host.includes(".") && host.split(".").pop()!.length >= 2;
+
+    if (!isLocalhost && !isLoc && !hasTld) {
+      return {
+        normalized: "",
+        error: "Домен должен содержать корректный TLD, .loc или localhost.",
+        basePath: "",
+      };
+    }
+
+    let path = url.pathname || "/";
+    if (!path.startsWith("/")) {
+      path = `/${path}`;
+    }
+    if (!path.endsWith("/")) {
+      path = `${path}/`;
+    }
+
+    const normalized = `${url.protocol}//${host}${url.port ? `:${url.port}` : ""}${path}`;
+
+    return { normalized, error: "", basePath: path };
+  };
+
+  const canUsePathPrefix = (
+    preserve: boolean,
+    basePath: string,
+    baseUrl: string
+  ) => {
+    if (!preserve || !baseUrl) {
+      return false;
+    }
+
+    return basePath === "/" || basePath === "";
+  };
+
+  const normalizePathPrefix = (value: string) => {
+    const trimmed = value.trim().replace(/\\/g, "/");
+    if (!trimmed) {
+      return "";
+    }
+
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+      return "";
+    }
+
+    if (!trimmed.startsWith("/") || trimmed.includes("?") || trimmed.includes("#")) {
+      return "";
+    }
+
+    const normalized = `/${trimmed.replace(/^\/+/, "").replace(/\/+$/, "")}/`;
+    return normalized === "//" ? "/" : normalized;
+  };
+
+  const formatHreflangs = (summary: AlternateSummary | null) => {
+    if (!summary || summary.hreflangs.length === 0) {
+      return "-";
+    }
+
+    return summary.hreflangs.join(", ");
+  };
+
   const loadEntities = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -167,11 +353,54 @@ export default function UniqueLinkTagsPage() {
     loadEntities();
   }, [loadEntities]);
 
+  useEffect(() => {
+    if (!alternateValidation.allowPathPrefix && alternateForm.pathPrefix) {
+      setAlternateForm((prev) => ({ ...prev, pathPrefix: "" }));
+    }
+  }, [alternateForm.pathPrefix, alternateValidation.allowPathPrefix]);
+
+  useEffect(() => {
+    if (!isDialogOpen || !selected) {
+      return;
+    }
+
+    const loadAlternateLinks = async () => {
+      setIsAlternateLoading(true);
+      try {
+        const data = await apiGet<{ items: AlternateItem[] }>(
+          `forge-admin-suite/v1/unique-link-tags/alternate-links/${selected.id}`
+        );
+        setAlternateItems(data.items ?? []);
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Не удалось загрузить alternate links";
+        console.error(error);
+        toast.error(message);
+        setAlternateItems([]);
+      } finally {
+        setIsAlternateLoading(false);
+      }
+    };
+
+    loadAlternateLinks();
+  }, [isDialogOpen, selected]);
+
   const openDialog = (entity: UniqueCanonicalEntity) => {
     setSelected(entity);
     setBaseUrl(entity.rule?.baseUrl ?? "");
     setPreserveDefaultPath(entity.rule?.preserveDefaultPath ?? true);
     setBaseUrlError(validateBaseUrl(entity.rule?.baseUrl ?? "").error);
+    setAlternateItems([]);
+    setAlternateForm({
+      hreflang: "",
+      hrefBaseUrl: "",
+      preserveDefaultPath: true,
+      pathPrefix: "",
+    });
+    setAlternateEditIndex(null);
+    setAlternateDeleteIndex(null);
     setIsDialogOpen(true);
   };
 
@@ -181,11 +410,98 @@ export default function UniqueLinkTagsPage() {
     setBaseUrl("");
     setPreserveDefaultPath(true);
     setBaseUrlError("");
+    setAlternateItems([]);
+    setAlternateForm({
+      hreflang: "",
+      hrefBaseUrl: "",
+      preserveDefaultPath: true,
+      pathPrefix: "",
+    });
+    setAlternateEditIndex(null);
+    setAlternateDeleteIndex(null);
+    setIsAlternateDeleteOpen(false);
   };
 
   const openDeleteConfirm = (entity: UniqueCanonicalEntity) => {
     setPendingDelete(entity);
     setIsConfirmOpen(true);
+  };
+
+  const handleAlternateEdit = (index: number) => {
+    const item = alternateItems[index];
+    if (!item) {
+      return;
+    }
+
+    setAlternateForm({
+      hreflang: item.hreflang,
+      hrefBaseUrl: item.hrefBaseUrl,
+      preserveDefaultPath: item.preserveDefaultPath,
+      pathPrefix: item.pathPrefix,
+    });
+    setAlternateEditIndex(index);
+  };
+
+  const resetAlternateForm = () => {
+    setAlternateForm({
+      hreflang: "",
+      hrefBaseUrl: "",
+      preserveDefaultPath: true,
+      pathPrefix: "",
+    });
+    setAlternateEditIndex(null);
+  };
+
+  const handleAlternateSave = () => {
+    if (!alternateValidation.isValid) {
+      const message =
+        alternateValidation.errors.hreflang ||
+        alternateValidation.errors.hrefBaseUrl ||
+        alternateValidation.errors.pathPrefix ||
+        "Проверьте значения alternate link.";
+      toast.error(message);
+      return;
+    }
+
+    const normalized = alternateValidation.normalized;
+    if (!normalized.hreflang || !normalized.hrefBaseUrl) {
+      toast.error("Hreflang и URL обязательны.");
+      return;
+    }
+
+    setAlternateItems((prev) => {
+      if (alternateEditIndex === null) {
+        return [...prev, normalized];
+      }
+
+      return prev.map((item, index) =>
+        index === alternateEditIndex ? normalized : item
+      );
+    });
+
+    resetAlternateForm();
+  };
+
+  const openAlternateDeleteConfirm = (index: number) => {
+    setAlternateDeleteIndex(index);
+    setIsAlternateDeleteOpen(true);
+  };
+
+  const handleAlternateDelete = () => {
+    if (alternateDeleteIndex === null) {
+      return;
+    }
+
+    setAlternateItems((prev) =>
+      prev.filter((_, index) => index !== alternateDeleteIndex)
+    );
+
+    if (alternateEditIndex === alternateDeleteIndex) {
+      resetAlternateForm();
+    }
+
+    setAlternateDeleteIndex(null);
+    setIsAlternateDeleteOpen(false);
   };
 
   const handleSave = async () => {
@@ -207,6 +523,12 @@ export default function UniqueLinkTagsPage() {
         {
           baseUrl,
           preserveDefaultPath,
+        }
+      );
+      await apiPost<{ items: AlternateItem[] }>(
+        `forge-admin-suite/v1/unique-link-tags/alternate-links/${selected.id}`,
+        {
+          items: alternateItems,
         }
       );
       toast.success("Правило сохранено");
@@ -280,14 +602,15 @@ export default function UniqueLinkTagsPage() {
             <TableHead className="w-16 border-r text-center">ID</TableHead>
             <TableHead className="w-28">Тип</TableHead>
             <TableHead>Название</TableHead>
-            <TableHead>Текущее правило</TableHead>
+            <TableHead>General link tags</TableHead>
+            <TableHead>Unique link tags</TableHead>
             <TableHead className="w-32 text-right">Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="border-b">
           {items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 Нет данных
               </TableCell>
             </TableRow>
@@ -314,18 +637,14 @@ export default function UniqueLinkTagsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {entity.rule?.baseUrl ? (
-                    <div className="space-y-1 text-xs">
-                      <p className="truncate">{entity.rule.baseUrl}</p>
-                      <p className="text-muted-foreground">
-                        {entity.rule.preserveDefaultPath
-                          ? "Сохраняет путь"
-                          : "Использует базовый путь"}
-                      </p>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">-</span>
-                  )}
+                  <span className="text-sm text-muted-foreground">
+                    {formatHreflangs(entity.general)}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">
+                    {formatHreflangs(entity.unique)}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
@@ -363,7 +682,7 @@ export default function UniqueLinkTagsPage() {
                         <TooltipContent>Открыть</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    {entity.rule ? (
+                    {entity.rule || (entity.unique && entity.unique.count > 0) ? (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
@@ -454,9 +773,233 @@ export default function UniqueLinkTagsPage() {
                 Preserve default path
               </Label>
             </div>
+            <div className="space-y-3 border-t pt-4">
+              <div>
+                <h4 className="text-sm font-semibold">
+                  Alternate (hreflang) links
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Уникальные alternate ссылки для выбранной записи.
+                </p>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-24">Hreflang</TableHead>
+                    <TableHead>Base URL</TableHead>
+                    <TableHead className="w-20 text-center">Preserve</TableHead>
+                    <TableHead className="w-28">Prefix</TableHead>
+                    <TableHead className="w-24 text-right">Действия</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isAlternateLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center text-muted-foreground"
+                      >
+                        Загрузка...
+                      </TableCell>
+                    </TableRow>
+                  ) : alternateItems.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center text-muted-foreground"
+                      >
+                        Нет данных
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    alternateItems.map((item, index) => (
+                      <TableRow key={`${item.hreflang}-${index}`}>
+                        <TableCell>
+                          <Badge>{item.hreflang}</Badge>
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {item.hrefBaseUrl}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {item.preserveDefaultPath ? (
+                            <Badge>Да</Badge>
+                          ) : (
+                            <Badge className="bg-muted text-foreground">
+                              Нет
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {item.pathPrefix || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-2">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Button
+                                    type="button"
+                                    className="p-2"
+                                    onClick={() => handleAlternateEdit(index)}
+                                    disabled={isSaving || isDeleting}
+                                    aria-label="Edit"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Редактировать</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Button
+                                    type="button"
+                                    className="p-2 bg-red-400 text-foreground hover:bg-red-600/80"
+                                    onClick={() =>
+                                      openAlternateDeleteConfirm(index)
+                                    }
+                                    disabled={isSaving || isDeleting}
+                                    aria-label="Delete"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Удалить</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-sm font-semibold">
+                    {alternateEditIndex === null
+                      ? "Добавить alternate link"
+                      : "Редактировать alternate link"}
+                  </h5>
+                  {alternateEditIndex !== null ? (
+                    <Button
+                      type="button"
+                      className="bg-muted text-foreground hover:bg-muted/70"
+                      onClick={resetAlternateForm}
+                      disabled={isSaving || isDeleting}
+                    >
+                      Сбросить
+                    </Button>
+                  ) : null}
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="alternate-hreflang">Hreflang</Label>
+                    <Input
+                      id="alternate-hreflang"
+                      placeholder="en, fr, x-default"
+                      value={alternateForm.hreflang}
+                      onChange={(event) =>
+                        setAlternateForm((prev) => ({
+                          ...prev,
+                          hreflang: event.target.value,
+                        }))
+                      }
+                      disabled={isSaving || isDeleting}
+                    />
+                    {alternateValidation.errors.hreflang ? (
+                      <p className="text-xs text-destructive">
+                        {alternateValidation.errors.hreflang}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="alternate-base-url">Base URL</Label>
+                    <Input
+                      id="alternate-base-url"
+                      placeholder="https://newsite.com/en/"
+                      value={alternateForm.hrefBaseUrl}
+                      onChange={(event) =>
+                        setAlternateForm((prev) => ({
+                          ...prev,
+                          hrefBaseUrl: event.target.value,
+                        }))
+                      }
+                      disabled={isSaving || isDeleting}
+                    />
+                    {alternateValidation.errors.hrefBaseUrl ? (
+                      <p className="text-xs text-destructive">
+                        {alternateValidation.errors.hrefBaseUrl}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="alternate-preserve-path"
+                    checked={alternateForm.preserveDefaultPath}
+                    onChange={(event) =>
+                      setAlternateForm((prev) => ({
+                        ...prev,
+                        preserveDefaultPath: event.target.checked,
+                      }))
+                    }
+                    disabled={isSaving || isDeleting}
+                  />
+                  <Label htmlFor="alternate-preserve-path">
+                    Preserve default path
+                  </Label>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="alternate-path-prefix">Path prefix</Label>
+                  <Input
+                    id="alternate-path-prefix"
+                    placeholder="/en/"
+                    value={alternateForm.pathPrefix}
+                    onChange={(event) =>
+                      setAlternateForm((prev) => ({
+                        ...prev,
+                        pathPrefix: event.target.value,
+                      }))
+                    }
+                    disabled={
+                      isSaving ||
+                      isDeleting ||
+                      !alternateValidation.allowPathPrefix
+                    }
+                  />
+                  {alternateValidation.allowPathPrefix ? (
+                    alternateValidation.errors.pathPrefix ? (
+                      <p className="text-xs text-destructive">
+                        {alternateValidation.errors.pathPrefix}
+                      </p>
+                    ) : null
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Доступно только при preserve path и base URL без префикса.
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleAlternateSave}
+                    disabled={
+                      isSaving ||
+                      isDeleting ||
+                      !alternateValidation.isValid
+                    }
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {alternateEditIndex === null ? "Добавить" : "Сохранить"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
           <DialogFooter className="mt-6">
-            {selected?.rule ? (
+            {selected?.rule || alternateItems.length > 0 ? (
               <Button
                 type="button"
                 className="bg-muted text-foreground hover:bg-muted/70"
@@ -494,7 +1037,7 @@ export default function UniqueLinkTagsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Удалить правило</AlertDialogTitle>
             <AlertDialogDescription>
-              Вы уверены, что хотите удалить уникальный link tag для этой записи?
+              Вы уверены, что хотите удалить уникальные link tags для этой записи?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
@@ -512,6 +1055,43 @@ export default function UniqueLinkTagsPage() {
               disabled={isDeleting}
             >
               {isDeleting ? "Удаление..." : "Удалить"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={isAlternateDeleteOpen}
+        onOpenChange={(open) => {
+          setIsAlternateDeleteOpen(open);
+          if (!open) {
+            setAlternateDeleteIndex(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить alternate link?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6">
+            <Button
+              type="button"
+              className="bg-muted text-foreground hover:bg-muted/70"
+              onClick={() => setIsAlternateDeleteOpen(false)}
+              disabled={isSaving || isDeleting}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              className="bg-red-500 text-white hover:bg-red-600"
+              onClick={handleAlternateDelete}
+              disabled={isSaving || isDeleting}
+            >
+              Удалить
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
