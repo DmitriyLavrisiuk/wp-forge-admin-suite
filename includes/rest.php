@@ -419,6 +419,7 @@ final class Forge_Admin_Suite_Rest {
 				'title'    => sanitize_text_field( $post->post_title ),
 				'editLink' => esc_url_raw( get_edit_post_link( $post_id, '' ) ),
 				'viewLink' => esc_url_raw( $this->get_unique_canonical_view_link( $post ) ),
+				'canonicalUrl' => esc_url_raw( $this->get_entity_canonical_url( $post_id ) ),
 				'rule'     => $this->get_unique_canonical_rule_for_post( $post_id ),
 				'unique'   => $unique_summary,
 				'general'  => $general_summary,
@@ -711,6 +712,17 @@ final class Forge_Admin_Suite_Rest {
 			'count'     => count( $hreflangs ),
 			'hreflangs' => $hreflangs,
 		);
+	}
+
+	/**
+	 * Get canonical URL for a post.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	private function get_entity_canonical_url( $post_id ) {
+		$link = get_permalink( $post_id );
+		return is_string( $link ) ? $link : '';
 	}
 
 	/**

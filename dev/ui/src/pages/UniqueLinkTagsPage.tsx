@@ -62,6 +62,7 @@ type UniqueCanonicalEntity = {
   title: string;
   editLink: string;
   viewLink: string;
+  canonicalUrl: string;
   rule: UniqueCanonicalRule | null;
   unique: AlternateSummary | null;
   general: AlternateSummary | null;
@@ -176,6 +177,25 @@ function formatHreflangs(summary: AlternateSummary | null) {
   }
 
   return summary.hreflangs.join(", ");
+}
+
+function renderCanonicalCell(url: string) {
+  if (!url) {
+    return <span className="text-sm text-muted-foreground">-</span>;
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <span className="block max-w-[220px] truncate font-mono text-xs">
+            {url}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{url}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 export default function UniqueLinkTagsPage() {
@@ -605,7 +625,7 @@ export default function UniqueLinkTagsPage() {
             <TableHead className="w-16 border-r text-center">ID</TableHead>
             <TableHead className="w-28">Тип</TableHead>
             <TableHead>Название</TableHead>
-            <TableHead>General link tags</TableHead>
+            <TableHead>Canonical</TableHead>
             <TableHead>Unique link tags</TableHead>
             <TableHead className="w-32 text-right">Действия</TableHead>
           </TableRow>
@@ -640,9 +660,7 @@ export default function UniqueLinkTagsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm text-muted-foreground">
-                    {formatHreflangs(entity.general)}
-                  </span>
+                  {renderCanonicalCell(entity.canonicalUrl)}
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-muted-foreground">
