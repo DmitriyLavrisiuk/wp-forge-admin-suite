@@ -277,14 +277,14 @@ export default function UniqueCanonicalRulesPage() {
         </TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-16">ID</TableHead>
+            <TableHead className="w-16 border-r text-center">ID</TableHead>
             <TableHead className="w-28">Тип</TableHead>
             <TableHead>Название</TableHead>
             <TableHead>Текущее правило</TableHead>
             <TableHead className="w-32 text-right">Действия</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="border-b">
           {items.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center text-muted-foreground">
@@ -294,7 +294,7 @@ export default function UniqueCanonicalRulesPage() {
           ) : (
             items.map((entity) => (
               <TableRow key={entity.id}>
-                <TableCell>{entity.id}</TableCell>
+                <TableCell className="border-r text-center">{entity.id}</TableCell>
                 <TableCell>
                   <Badge>{entity.type}</Badge>
                 </TableCell>
