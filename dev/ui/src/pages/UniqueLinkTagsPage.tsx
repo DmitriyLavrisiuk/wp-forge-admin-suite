@@ -76,6 +76,108 @@ type UniqueCanonicalResponse = {
 
 const DEFAULT_PER_PAGE = 50;
 
+function normalizeHreflang(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function parseAlternateBaseUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return { normalized: "", error: "URL обязателен.", basePath: "" };
+  }
+
+  const withScheme = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+
+  let url: URL;
+  try {
+    url = new URL(withScheme);
+  } catch {
+    return { normalized: "", error: "Введите корректный URL.", basePath: "" };
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return {
+      normalized: "",
+      error: "Разрешены только http или https.",
+      basePath: "",
+    };
+  }
+
+  const host = url.hostname.toLowerCase();
+  if (
+    !/^[a-z0-9.-]+$/.test(host) ||
+    host.includes("..") ||
+    host.startsWith(".") ||
+    host.endsWith(".")
+  ) {
+    return { normalized: "", error: "Некорректный домен.", basePath: "" };
+  }
+
+  const isLocalhost = host === "localhost";
+  const isLoc = host.endsWith(".loc");
+  const hasTld = host.includes(".") && host.split(".").pop()!.length >= 2;
+
+  if (!isLocalhost && !isLoc && !hasTld) {
+    return {
+      normalized: "",
+      error: "Домен должен содержать корректный TLD, .loc или localhost.",
+      basePath: "",
+    };
+  }
+
+  let path = url.pathname || "/";
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
+  }
+  if (!path.endsWith("/")) {
+    path = `${path}/`;
+  }
+
+  const normalized = `${url.protocol}//${host}${url.port ? `:${url.port}` : ""}${path}`;
+
+  return { normalized, error: "", basePath: path };
+}
+
+function canUsePathPrefix(
+  preserve: boolean,
+  basePath: string,
+  baseUrl: string
+) {
+  if (!preserve || !baseUrl) {
+    return false;
+  }
+
+  return basePath === "/" || basePath === "";
+}
+
+function normalizePathPrefix(value: string) {
+  const trimmed = value.trim().replace(/\\/g, "/");
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    return "";
+  }
+
+  if (!trimmed.startsWith("/") || trimmed.includes("?") || trimmed.includes("#")) {
+    return "";
+  }
+
+  const normalized = `/${trimmed.replace(/^\/+/, "").replace(/\/+$/, "")}/`;
+  return normalized === "//" ? "/" : normalized;
+}
+
+function formatHreflangs(summary: AlternateSummary | null) {
+  if (!summary || summary.hreflangs.length === 0) {
+    return "-";
+  }
+
+  return summary.hreflangs.join(", ");
+}
+
 export default function UniqueLinkTagsPage() {
   const [items, setItems] = useState<UniqueCanonicalEntity[]>([]);
   const [page, setPage] = useState(1);
@@ -225,105 +327,6 @@ export default function UniqueLinkTagsPage() {
     return { normalized, error: "" };
   };
 
-  const normalizeHreflang = (value: string) => value.trim().toLowerCase();
-
-  const parseAlternateBaseUrl = (value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      return { normalized: "", error: "URL обязателен.", basePath: "" };
-    }
-
-    const withScheme = /^https?:\/\//i.test(trimmed)
-      ? trimmed
-      : `https://${trimmed}`;
-
-    let url: URL;
-    try {
-      url = new URL(withScheme);
-    } catch {
-      return { normalized: "", error: "Введите корректный URL.", basePath: "" };
-    }
-
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      return {
-        normalized: "",
-        error: "Разрешены только http или https.",
-        basePath: "",
-      };
-    }
-
-    const host = url.hostname.toLowerCase();
-    if (
-      !/^[a-z0-9.-]+$/.test(host) ||
-      host.includes("..") ||
-      host.startsWith(".") ||
-      host.endsWith(".")
-    ) {
-      return { normalized: "", error: "Некорректный домен.", basePath: "" };
-    }
-
-    const isLocalhost = host === "localhost";
-    const isLoc = host.endsWith(".loc");
-    const hasTld = host.includes(".") && host.split(".").pop()!.length >= 2;
-
-    if (!isLocalhost && !isLoc && !hasTld) {
-      return {
-        normalized: "",
-        error: "Домен должен содержать корректный TLD, .loc или localhost.",
-        basePath: "",
-      };
-    }
-
-    let path = url.pathname || "/";
-    if (!path.startsWith("/")) {
-      path = `/${path}`;
-    }
-    if (!path.endsWith("/")) {
-      path = `${path}/`;
-    }
-
-    const normalized = `${url.protocol}//${host}${url.port ? `:${url.port}` : ""}${path}`;
-
-    return { normalized, error: "", basePath: path };
-  };
-
-  const canUsePathPrefix = (
-    preserve: boolean,
-    basePath: string,
-    baseUrl: string
-  ) => {
-    if (!preserve || !baseUrl) {
-      return false;
-    }
-
-    return basePath === "/" || basePath === "";
-  };
-
-  const normalizePathPrefix = (value: string) => {
-    const trimmed = value.trim().replace(/\\/g, "/");
-    if (!trimmed) {
-      return "";
-    }
-
-    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
-      return "";
-    }
-
-    if (!trimmed.startsWith("/") || trimmed.includes("?") || trimmed.includes("#")) {
-      return "";
-    }
-
-    const normalized = `/${trimmed.replace(/^\/+/, "").replace(/\/+$/, "")}/`;
-    return normalized === "//" ? "/" : normalized;
-  };
-
-  const formatHreflangs = (summary: AlternateSummary | null) => {
-    if (!summary || summary.hreflangs.length === 0) {
-      return "-";
-    }
-
-    return summary.hreflangs.join(", ");
-  };
 
   const loadEntities = useCallback(async () => {
     setIsLoading(true);

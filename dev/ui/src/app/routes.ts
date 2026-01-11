@@ -33,7 +33,7 @@ export const routes: AppRoute[] = [
     showInNav: true,
   },
   {
-    path: "/canonical",
+    path: "/general-link-tags",
     navLabel: "General Link Tags",
     pageTitle: "General Link Tags",
     Component: GeneralLinkTagsPage,
@@ -41,7 +41,7 @@ export const routes: AppRoute[] = [
     showInNav: true,
   },
   {
-    path: "/unique-canonical",
+    path: "/unique-link-tags",
     navLabel: "Unique Link Tags",
     pageTitle: "Unique Link Tags",
     Component: UniqueLinkTagsPage,
