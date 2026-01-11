@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, HelpCircle, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "../components/ui/button";
 import Badge from "../components/ui/badge";
@@ -22,6 +22,7 @@ import {
 } from "../components/ui/alert-dialog";
 import Input from "../components/ui/input";
 import Label from "../components/ui/label";
+import Separator from "../components/ui/separator";
 import {
   Table,
   TableBody,
@@ -180,7 +181,8 @@ function formatHreflangs(summary: AlternateSummary | null) {
 }
 
 function renderCanonicalCell(url: string) {
-  if (!url) {
+  const trimmed = typeof url === "string" ? url.trim() : "";
+  if (!trimmed) {
     return <span className="text-sm text-muted-foreground">-</span>;
   }
 
@@ -189,10 +191,10 @@ function renderCanonicalCell(url: string) {
       <Tooltip>
         <TooltipTrigger>
           <span className="block max-w-[220px] truncate font-mono text-xs">
-            {url}
+            {trimmed}
           </span>
         </TooltipTrigger>
-        <TooltipContent>{url}</TooltipContent>
+        <TooltipContent>{trimmed}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
@@ -756,11 +758,11 @@ export default function UniqueLinkTagsPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Unique Link Tags</DialogTitle>
             <DialogDescription>
-              Настройте уникальный link tag для выбранной записи.
+              Настройте канонический адрес (base URL) для выбранной записи.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -790,11 +792,27 @@ export default function UniqueLinkTagsPage() {
                 }
                 disabled={isSaving || isDeleting}
               />
-              <Label htmlFor="preserve-default-path">
-                Preserve default path
-              </Label>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="preserve-default-path">
+                  Сохранять исходный путь записи
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <span className="inline-flex h-4 w-4 items-center justify-center text-muted-foreground">
+                        <HelpCircle className="h-4 w-4" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Если включено — к Base URL будет добавлен стандартный путь
+                      текущей записи (permalink).
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
-            <div className="space-y-3 border-t pt-4">
+            <Separator className="my-4" />
+            <div className="space-y-3">
               <div>
                 <h4 className="text-sm font-semibold">
                   Alternate (hreflang) links
