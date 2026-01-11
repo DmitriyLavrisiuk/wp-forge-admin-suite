@@ -16,7 +16,7 @@ type SettingsResponse = {
   canonicalOrigin: string;
 };
 
-export default function CanonicalPage() {
+export default function GeneralCanonicalRulesPage() {
   const [canonicalOrigin, setCanonicalOrigin] = useState("");
   const [originError, setOriginError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -138,9 +138,10 @@ export default function CanonicalPage() {
     <div className="min-h-[10vh]">
       <Card>
         <CardHeader>
-          <CardTitle>Canonical</CardTitle>
+          <CardTitle>General Canonical Rules</CardTitle>
           <CardDescription>
-            Заменяет схему и домен всех canonical URL на указанный домен.
+            General Canonical Rules заменяет схему и домен всех canonical URL на
+            указанный домен.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

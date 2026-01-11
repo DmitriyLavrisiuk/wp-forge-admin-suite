@@ -1,6 +1,6 @@
 <?php
 /**
- * Canonical URL override for frontend pages.
+ * General canonical rules for frontend pages.
  *
  * @package ForgeAdminSuite
  */
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Handles canonical replacement on frontend output.
  */
-final class Forge_Admin_Suite_Canonical {
+final class Forge_Admin_Suite_General_Canonical_Rules {
 	/**
 	 * Whether output buffering is active.
 	 *
