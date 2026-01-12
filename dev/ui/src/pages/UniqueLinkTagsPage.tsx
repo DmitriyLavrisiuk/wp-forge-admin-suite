@@ -6,12 +6,6 @@ import Badge from "../components/ui/badge";
 import Checkbox from "../components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../components/ui/accordion";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,6 +23,7 @@ import {
 } from "../components/ui/alert-dialog";
 import Input from "../components/ui/input";
 import Label from "../components/ui/label";
+import Separator from "../components/ui/separator";
 import {
   Table,
   TableBody,
@@ -94,9 +89,6 @@ type AlternateValidation = {
 };
 
 const DEFAULT_PER_PAGE = 50;
-const ACCORDION_STORAGE_KEY =
-  "forgeAdminSuite.uniqueLinkTags.modalAccordion";
-const DEFAULT_ACCORDION_ITEMS = ["canonical", "alternate"];
 
 function normalizeHreflang(value: string) {
   return value.trim().toLowerCase();
@@ -250,52 +242,6 @@ function formatHreflangs(summary: AlternateSummary | null) {
   }
 
   return summary.hreflangs.join(", ");
-}
-
-function usePersistentAccordionValue(key: string, defaultValue: string[]) {
-  const [value, setValue] = useState<string[]>(defaultValue);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    try {
-      const stored = window.localStorage.getItem(key);
-      if (!stored) {
-        return;
-      }
-
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        const sanitized = parsed.filter(
-          (item): item is string => typeof item === "string"
-        );
-        setValue(sanitized);
-      }
-    } catch {
-      // Ignore malformed localStorage values.
-    }
-  }, [key]);
-
-  const handleChange = useCallback(
-    (next: string[]) => {
-      setValue(next);
-
-      if (typeof window === "undefined") {
-        return;
-      }
-
-      try {
-        window.localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        // Ignore localStorage write errors.
-      }
-    },
-    [key]
-  );
-
-  return { value, handleChange };
 }
 
 type UniqueCanonicalSectionProps = {
@@ -712,12 +658,6 @@ export default function UniqueLinkTagsPage() {
       },
     };
   }, [alternateEditIndex, alternateForm, alternateItems]);
-
-  const { value: accordionValue, handleChange: handleAccordionChange } =
-    usePersistentAccordionValue(
-      ACCORDION_STORAGE_KEY,
-      DEFAULT_ACCORDION_ITEMS
-    );
 
   const handleBaseUrlChange = useCallback((value: string) => {
     setBaseUrl(value);
@@ -1155,45 +1095,31 @@ export default function UniqueLinkTagsPage() {
               Настройте канонический адрес (base URL) для выбранной записи.
             </DialogDescription>
           </DialogHeader>
-          <Accordion
-            type="multiple"
-            value={accordionValue}
-            onValueChange={handleAccordionChange}
-            className="w-full"
-          >
-            <AccordionItem value="canonical">
-              <AccordionTrigger>Канонический адрес</AccordionTrigger>
-              <AccordionContent>
-                <UniqueCanonicalSection
-                  baseUrl={baseUrl}
-                  baseUrlError={baseUrlError}
-                  onBaseUrlChange={handleBaseUrlChange}
-                  preserveDefaultPath={preserveDefaultPath}
-                  onPreserveDefaultPathChange={handlePreserveDefaultPathChange}
-                  isDisabled={isSaving || isDeleting}
-                />
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="alternate">
-              <AccordionTrigger>Alternate (hreflang) links</AccordionTrigger>
-              <AccordionContent>
-                <UniqueAlternateLinksSection
-                  alternateItems={alternateItems}
-                  alternateForm={alternateForm}
-                  alternateValidation={alternateValidation}
-                  alternateEditIndex={alternateEditIndex}
-                  isAlternateLoading={isAlternateLoading}
-                  isSaving={isSaving}
-                  isDeleting={isDeleting}
-                  onEdit={handleAlternateEdit}
-                  onDeleteRequest={openAlternateDeleteConfirm}
-                  onFormChange={updateAlternateForm}
-                  onResetForm={resetAlternateForm}
-                  onSave={handleAlternateSave}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <div className="space-y-4">
+            <UniqueCanonicalSection
+              baseUrl={baseUrl}
+              baseUrlError={baseUrlError}
+              onBaseUrlChange={handleBaseUrlChange}
+              preserveDefaultPath={preserveDefaultPath}
+              onPreserveDefaultPathChange={handlePreserveDefaultPathChange}
+              isDisabled={isSaving || isDeleting}
+            />
+            <Separator />
+            <UniqueAlternateLinksSection
+              alternateItems={alternateItems}
+              alternateForm={alternateForm}
+              alternateValidation={alternateValidation}
+              alternateEditIndex={alternateEditIndex}
+              isAlternateLoading={isAlternateLoading}
+              isSaving={isSaving}
+              isDeleting={isDeleting}
+              onEdit={handleAlternateEdit}
+              onDeleteRequest={openAlternateDeleteConfirm}
+              onFormChange={updateAlternateForm}
+              onResetForm={resetAlternateForm}
+              onSave={handleAlternateSave}
+            />
+          </div>
           <DialogFooter className="mt-6">
             {selected?.rule || alternateItems.length > 0 ? (
               <Button
