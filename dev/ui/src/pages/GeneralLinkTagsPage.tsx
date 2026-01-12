@@ -486,10 +486,10 @@ export default function GeneralLinkTagsPage() {
     <div className="min-h-[10vh] space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>General Link Tags</CardTitle>
+          <CardTitle>General Canonical Rules</CardTitle>
           <CardDescription>
-            General Link Tags заменяет схему и домен всех canonical URL на
-            указанный домен.
+            Глобально заменяет домен в canonical URL на указанный. Путь и
+            параметры страницы сохраняются.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -510,8 +510,9 @@ export default function GeneralLinkTagsPage() {
               <p className="text-xs text-destructive">{originError}</p>
             ) : null}
             <p className="text-xs text-muted-foreground">
-              Сохраняется только схема и домен (опционально порт). Путь,
-              параметры и фрагмент остаются неизменными.
+              Сохраняется только схема и домен (опционально порт). Путь, query и
+              fragment остаются без изменений. Уникальные правила имеют
+              приоритет.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -531,7 +532,8 @@ export default function GeneralLinkTagsPage() {
             <div>
               <CardTitle>Alternate (hreflang) links</CardTitle>
               <CardDescription>
-                Управляйте global hreflang ссылками для всех страниц сайта.
+                Настройте alternate ссылки для всех страниц. Значение hreflang
+                должно быть уникальным.
               </CardDescription>
             </div>
             <Button
@@ -596,7 +598,7 @@ export default function GeneralLinkTagsPage() {
                           <TooltipTrigger>
                             <Button
                               type="button"
-                              className="h-8 w-8 bg-muted text-foreground"
+                              className="p-2 bg-muted text-foreground"
                               onClick={() => handleAlternateDialogOpen(index)}
                               aria-label="Edit"
                             >
@@ -609,7 +611,7 @@ export default function GeneralLinkTagsPage() {
                           <TooltipTrigger>
                             <Button
                               type="button"
-                              className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
+                              className="p-2 bg-red-500 text-white hover:bg-red-600"
                               onClick={() => {
                                 setPendingDeleteIndex(index);
                                 setDeleteOpen(true);
@@ -641,7 +643,7 @@ export default function GeneralLinkTagsPage() {
           <DialogHeader>
             <DialogTitle>Alternate (hreflang) link</DialogTitle>
             <DialogDescription>
-              Заполните параметры alternate link для общего применения.
+              Укажите параметры alternate ссылки для глобального применения.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -662,6 +664,9 @@ export default function GeneralLinkTagsPage() {
                   {alternateValidation.errors.hreflang}
                 </p>
               ) : null}
+              <p className="text-xs text-muted-foreground">
+                Пример: en, es, x-default. Hreflang должен быть уникальным.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="hrefBaseUrl">Base URL</Label>
@@ -680,6 +685,10 @@ export default function GeneralLinkTagsPage() {
                   {alternateValidation.errors.hrefBaseUrl}
                 </p>
               ) : null}
+              <p className="text-xs text-muted-foreground">
+                Всегда абсолютный URL. При preserve path добавляется путь текущей
+                страницы.
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <Checkbox
@@ -694,7 +703,9 @@ export default function GeneralLinkTagsPage() {
                 }}
                 disabled={alternateSaving || deleteLoading}
               />
-              <Label htmlFor="preserveDefaultPath">Preserve default path</Label>
+              <Label htmlFor="preserveDefaultPath">
+                Сохранять исходный путь страницы
+              </Label>
             </div>
             <div className="space-y-2">
               <Label htmlFor="pathPrefix">Path prefix</Label>
@@ -720,7 +731,8 @@ export default function GeneralLinkTagsPage() {
                 ) : null
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Доступно только при preserve path и base URL без префикса.
+                  Доступно только при сохранении пути и Base URL без собственного
+                  префикса.
                 </p>
               )}
             </div>

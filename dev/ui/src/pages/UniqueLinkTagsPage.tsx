@@ -662,7 +662,7 @@ export default function UniqueLinkTagsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {renderCanonicalCell(entity.canonicalUrl)}
+                  {renderCanonicalCell(entity.rule?.baseUrl ?? "")}
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-muted-foreground">
@@ -676,7 +676,7 @@ export default function UniqueLinkTagsPage() {
                         <TooltipTrigger>
                           <Button
                             type="button"
-                            className="p-2"
+                            className="p-2 bg-muted text-foreground"
                             onClick={() => openDialog(entity)}
                             aria-label="Edit"
                           >
@@ -691,7 +691,7 @@ export default function UniqueLinkTagsPage() {
                         <TooltipTrigger>
                           <Button
                             type="button"
-                            className="p-2 bg-primary text-secondary"
+                            className="p-2 bg-muted text-foreground"
                             onClick={() =>
                               entity.viewLink &&
                               window.open(entity.viewLink, "_blank", "noopener")
@@ -711,7 +711,7 @@ export default function UniqueLinkTagsPage() {
                           <TooltipTrigger>
                             <Button
                               type="button"
-                              className="p-2 bg-red-400 text-foreground hover:bg-red-600/80"
+                              className="p-2 bg-red-500 text-white hover:bg-red-600"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 openDeleteConfirm(entity);
