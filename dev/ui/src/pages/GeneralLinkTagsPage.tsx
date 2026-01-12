@@ -598,7 +598,7 @@ export default function GeneralLinkTagsPage() {
                           <TooltipTrigger>
                             <Button
                               type="button"
-                              className="p-2 bg-muted text-foreground"
+                              className="bg-muted text-foreground hover:bg-muted/70"
                               onClick={() => handleAlternateDialogOpen(index)}
                               aria-label="Edit"
                             >
@@ -611,7 +611,7 @@ export default function GeneralLinkTagsPage() {
                           <TooltipTrigger>
                             <Button
                               type="button"
-                              className="p-2 bg-red-500 text-white hover:bg-red-600"
+                              className="bg-red-500 text-white hover:bg-red-600"
                               onClick={() => {
                                 setPendingDeleteIndex(index);
                                 setDeleteOpen(true);

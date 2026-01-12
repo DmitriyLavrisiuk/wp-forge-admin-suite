@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import Button from "../components/ui/button";
 import Badge from "../components/ui/badge";
 import Checkbox from "../components/ui/checkbox";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -596,166 +597,171 @@ export default function UniqueLinkTagsPage() {
 
   return (
     <div className="min-h-[10vh] space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold">Unique Link Tags</h3>
-          <p className="text-sm text-muted-foreground">
-            Уникальные правила для отдельных записей с приоритетом выше общих.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Input
-            placeholder="Поиск по заголовку"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-            className="w-56"
-          />
-        </div>
-      </div>
-
-      <Table>
-        <TableCaption>
-          {isLoading
-            ? "Загрузка..."
-            : `Всего записей: ${total}. Страница ${page} из ${totalPages}.`}
-        </TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16 border-r text-center">ID</TableHead>
-            <TableHead className="w-28">Тип</TableHead>
-            <TableHead>Название</TableHead>
-            <TableHead>Canonical</TableHead>
-            <TableHead>Unique link tags</TableHead>
-            <TableHead className="w-32 text-right">Действия</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="border-b">
-          {items.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
-                Нет данных
-              </TableCell>
-            </TableRow>
-          ) : (
-            items.map((entity) => (
-              <TableRow key={entity.id}>
-                <TableCell className="border-r text-center">{entity.id}</TableCell>
-                <TableCell>
-                  <Badge>{entity.type}</Badge>
-                </TableCell>
-                <TableCell className="font-medium">
-                  <div className="space-y-1">
-                    <p className="line-clamp-2">{entity.title}</p>
-                    {entity.editLink ? (
-                      <a
-                        className="text-xs text-muted-foreground underline"
-                        href={entity.editLink}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Редактировать
-                      </a>
-                    ) : null}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {renderCanonicalCell(entity.rule?.baseUrl ?? "")}
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-muted-foreground">
-                    {formatHreflangs(entity.unique)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            type="button"
-                            className="p-2 bg-muted text-foreground"
-                            onClick={() => openDialog(entity)}
-                            aria-label="Edit"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Редактировать</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Button
-                            type="button"
-                            className="p-2 bg-muted text-foreground"
-                            onClick={() =>
-                              entity.viewLink &&
-                              window.open(entity.viewLink, "_blank", "noopener")
-                            }
-                            disabled={!entity.viewLink}
-                            aria-label="View"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Открыть</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    {entity.rule || (entity.unique && entity.unique.count > 0) ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Button
-                              type="button"
-                              className="p-2 bg-red-500 text-white hover:bg-red-600"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openDeleteConfirm(entity);
-                              }}
-                              aria-label="Clear"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Очистить</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : null}
-                  </div>
-                </TableCell>
+      <Card>
+        <CardHeader className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold">Unique Link Tags</h3>
+              <p className="text-sm text-muted-foreground">
+                Уникальные правила для отдельных записей с приоритетом выше общих.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                placeholder="Поиск по заголовку"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
+                className="w-56"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Table>
+            <TableCaption>
+              {isLoading
+                ? "Загрузка..."
+                : `Всего записей: ${total}. Страница ${page} из ${totalPages}.`}
+            </TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16 border-r text-center">ID</TableHead>
+                <TableHead className="w-28">Тип</TableHead>
+                <TableHead>Название</TableHead>
+                <TableHead>Canonical</TableHead>
+                <TableHead>Unique link tags</TableHead>
+                <TableHead className="w-32 text-right">Действия</TableHead>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody className="border-b">
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    Нет данных
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((entity) => (
+                  <TableRow key={entity.id}>
+                    <TableCell className="border-r text-center">{entity.id}</TableCell>
+                    <TableCell>
+                      <Badge>{entity.type}</Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <div className="space-y-1">
+                        <p className="line-clamp-2">{entity.title}</p>
+                        {entity.editLink ? (
+                          <a
+                            className="text-xs text-muted-foreground underline"
+                            href={entity.editLink}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Редактировать
+                          </a>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {renderCanonicalCell(entity.rule?.baseUrl ?? "")}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">
+                        {formatHreflangs(entity.unique)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button
+                                type="button"
+                                className="bg-muted text-foreground hover:bg-muted/70"
+                                onClick={() => openDialog(entity)}
+                                aria-label="Edit"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Редактировать</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button
+                                type="button"
+                                className="bg-muted text-foreground hover:bg-muted/70"
+                                onClick={() =>
+                                  entity.viewLink &&
+                                  window.open(entity.viewLink, "_blank", "noopener")
+                                }
+                                disabled={!entity.viewLink}
+                                aria-label="View"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Открыть</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {entity.rule || (entity.unique && entity.unique.count > 0) ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Button
+                                  type="button"
+                                  className="bg-red-500 text-white hover:bg-red-600"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openDeleteConfirm(entity);
+                                  }}
+                                  aria-label="Clear"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Очистить</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-xs text-muted-foreground">
-          Показано {items.length} из {total}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            className="bg-muted text-foreground hover:bg-muted/70"
-            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            disabled={page <= 1}
-          >
-            Назад
-          </Button>
-          <Button
-            type="button"
-            className="bg-muted text-foreground hover:bg-muted/70"
-            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-            disabled={page >= totalPages}
-          >
-            Вперёд
-          </Button>
-        </div>
-      </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs text-muted-foreground">
+              Показано {items.length} из {total}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                className="bg-muted text-foreground hover:bg-muted/70"
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={page <= 1}
+              >
+                Назад
+              </Button>
+              <Button
+                type="button"
+                className="bg-muted text-foreground hover:bg-muted/70"
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={page >= totalPages}
+              >
+                Вперёд
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-3xl">
@@ -878,7 +884,7 @@ export default function UniqueLinkTagsPage() {
                                 <TooltipTrigger>
                                   <Button
                                     type="button"
-                                    className="p-2"
+                                    className="bg-muted text-foreground hover:bg-muted/70"
                                     onClick={() => handleAlternateEdit(index)}
                                     disabled={isSaving || isDeleting}
                                     aria-label="Edit"
@@ -894,7 +900,7 @@ export default function UniqueLinkTagsPage() {
                                 <TooltipTrigger>
                                   <Button
                                     type="button"
-                                    className="p-2 bg-red-400 text-foreground hover:bg-red-600/80"
+                                    className="bg-red-500 text-white hover:bg-red-600"
                                     onClick={() =>
                                       openAlternateDeleteConfirm(index)
                                     }

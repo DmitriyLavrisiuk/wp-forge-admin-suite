@@ -67,7 +67,7 @@ export function TooltipContent({
   return (
     <span
       className={cn(
-        "absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 rounded-md bg-primary-foreground px-2 py-1 text-xs text-secondary-foreground shadow",
+        "absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 rounded-md bg-primary p-3 text-xs text-secondary shadow-xl",
         className
       )}
       {...props}
