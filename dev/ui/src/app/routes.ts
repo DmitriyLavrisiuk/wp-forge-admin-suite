@@ -2,9 +2,9 @@ import type { ComponentType } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Globe, Home, ListChecks, Settings } from "lucide-react";
 import DashboardPage from "../pages/DashboardPage";
-import GeneralCanonicalRulesPage from "../pages/GeneralCanonicalRulesPage";
+import GeneralLinkTagsPage from "../pages/GeneralLinkTagsPage";
 import SettingsPage from "../pages/SettingsPage";
-import UniqueCanonicalRulesPage from "../pages/UniqueCanonicalRulesPage";
+import UniqueLinkTagsPage from "../pages/UniqueLinkTagsPage";
 
 export type AppRoute = {
   path: string;
@@ -33,18 +33,18 @@ export const routes: AppRoute[] = [
     showInNav: true,
   },
   {
-    path: "/canonical",
-    navLabel: "General Canonical Rules",
-    pageTitle: "General Canonical Rules",
-    Component: GeneralCanonicalRulesPage,
+    path: "/general-link-tags",
+    navLabel: "General Link Tags",
+    pageTitle: "General Link Tags",
+    Component: GeneralLinkTagsPage,
     icon: Globe,
     showInNav: true,
   },
   {
-    path: "/unique-canonical",
-    navLabel: "Unique Canonical Rules",
-    pageTitle: "Unique Canonical Rules",
-    Component: UniqueCanonicalRulesPage,
+    path: "/unique-link-tags",
+    navLabel: "Unique Link Tags",
+    pageTitle: "Unique Link Tags",
+    Component: UniqueLinkTagsPage,
     icon: ListChecks,
     showInNav: true,
   },

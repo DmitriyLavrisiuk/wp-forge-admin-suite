@@ -76,3 +76,21 @@
 
 ## Git Hygiene
 - Keep changes minimal and focused per task.
+
+## Output rules
+ABSOLUTE OUTPUT BAN — BUILD ARTIFACTS:
+- Never print or include the contents of any files under:
+  - ui/dist/assets/**
+  - ui/dist/.vite/**
+- If these files change, only report them via `git diff --stat` and a one-line note like "Build artifact updated".
+- Do not include unified diff hunks for these paths.
+- Do not paste base64, minified JS/CSS, or large generated bundles in the response.
+RESPONSE FORMATTING (STRICT):
+- Always output in this order:
+  1) "Changed files:" as a plain bullet list (no code).
+  2) "Diff:" as a SINGLE fenced code block using ```diff ... ``` (or ``` for non-diff).
+  3) "Notes:" as plain text.
+- Never print diff hunks outside a fenced code block.
+- Never include lines starting with @@, diff --git, +++, ---, +, - outside a fenced block.
+- Never mix JSX/TSX snippets into plain text; wrap them in ```tsx``` blocks.
+- If the diff is large: output ONLY `git diff --stat` and a short summary (no hunks).

@@ -13,7 +13,7 @@ require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/admin-page.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/assets.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/settings.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/rest.php';
-require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/general-canonical-rules.php';
+require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/general-link-tags.php';
 
 /**
  * Main plugin controller.
@@ -34,11 +34,11 @@ final class Forge_Admin_Suite_Plugin {
 	private $rest;
 
 	/**
-	 * General canonical rules handler.
+	 * General link tags handler.
 	 *
-	 * @var Forge_Admin_Suite_General_Canonical_Rules
+	 * @var Forge_Admin_Suite_General_Link_Tags
 	 */
-	private $general_canonical_rules;
+	private $general_link_tags;
 
 	/**
 	 * Admin page handler.
@@ -73,13 +73,13 @@ final class Forge_Admin_Suite_Plugin {
 		$this->assets     = new Forge_Admin_Suite_Assets();
 		$this->rest       = new Forge_Admin_Suite_Rest();
 		$this->admin_page = new Forge_Admin_Suite_Admin_Page();
-		$this->general_canonical_rules = new Forge_Admin_Suite_General_Canonical_Rules();
+		$this->general_link_tags = new Forge_Admin_Suite_General_Link_Tags();
 
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 
 		$this->assets->register();
 		$this->rest->register();
-		$this->general_canonical_rules->register();
+		$this->general_link_tags->register();
 	}
 
 	/**
