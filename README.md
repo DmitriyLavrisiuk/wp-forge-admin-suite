@@ -1,7 +1,7 @@
 # Forge Admin Suite
 
 WordPress plugin scaffold for a React-powered admin page using Vite and Tailwind.
-Current version: 0.1.13
+Current version: 0.1.14
 
 ## Development
 - UI source: `dev/ui`

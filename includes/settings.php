@@ -104,9 +104,31 @@ final class Forge_Admin_Suite_Settings {
 }
 
 /**
- * Validate and normalize canonical origin.
+ * Normalize URL path with a leading and trailing slash.
  *
- * @param string $input Origin input.
+ * @param string $path Path input.
+ * @return string
+ */
+function forge_admin_suite_normalize_url_path( $path ) {
+	$normalized = is_string( $path ) ? $path : '/';
+	$normalized = str_replace( '\\', '/', $normalized );
+
+	if ( '' === $normalized ) {
+		$normalized = '/';
+	}
+
+	$normalized = '/' . ltrim( $normalized, '/' );
+	if ( '/' !== $normalized && '/' !== substr( $normalized, -1 ) ) {
+		$normalized .= '/';
+	}
+
+	return $normalized;
+}
+
+/**
+ * Validate and normalize canonical base URL.
+ *
+ * @param string $input Base URL input.
  * @return string|WP_Error
  */
 function forge_admin_suite_validate_origin( $input ) {
@@ -166,12 +188,15 @@ function forge_admin_suite_validate_origin( $input ) {
 	}
 
 	$port       = isset( $parts['port'] ) ? (int) $parts['port'] : 0;
+	$path       = isset( $parts['path'] ) ? forge_admin_suite_normalize_url_path( $parts['path'] ) : '/';
 	$normalized = $scheme . '://' . $host;
 	if ( $port > 0 ) {
 		$normalized .= ':' . $port;
 	}
 
-	return untrailingslashit( $normalized );
+	$normalized .= $path;
+
+	return $normalized;
 }
 
 /**
@@ -237,12 +262,7 @@ function forge_admin_suite_validate_base_url( $input ) {
 	}
 
 	$port = isset( $parts['port'] ) ? (int) $parts['port'] : 0;
-	$path = isset( $parts['path'] ) ? $parts['path'] : '/';
-	$path = '/' . ltrim( $path, '/' );
-
-	if ( '/' !== $path && '/' !== substr( $path, -1 ) ) {
-		$path .= '/';
-	}
+	$path = isset( $parts['path'] ) ? forge_admin_suite_normalize_url_path( $parts['path'] ) : '/';
 
 	$normalized = $scheme . '://' . $host;
 	if ( $port > 0 ) {
@@ -325,12 +345,7 @@ function forge_admin_suite_validate_alternate_link_item( $item ) {
 	$preserve     = (bool) $preserve_raw;
 
 	$base_parts = wp_parse_url( $href_base_url );
-	$base_path  = isset( $base_parts['path'] ) ? $base_parts['path'] : '/';
-	$base_path  = '/' . ltrim( $base_path, '/' );
-
-	if ( '/' !== $base_path && '/' !== substr( $base_path, -1 ) ) {
-		$base_path .= '/';
-	}
+	$base_path  = isset( $base_parts['path'] ) ? forge_admin_suite_normalize_url_path( $base_parts['path'] ) : '/';
 
 	$path_prefix = isset( $item['pathPrefix'] ) ? trim( sanitize_text_field( $item['pathPrefix'] ) ) : '';
 	if ( $preserve && '/' === $base_path && '' !== $path_prefix ) {

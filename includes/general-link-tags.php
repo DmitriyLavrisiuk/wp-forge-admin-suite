@@ -61,18 +61,18 @@ final class Forge_Admin_Suite_General_Link_Tags {
 			return;
 		}
 
-		$unique_rule      = $this->get_unique_rule_for_request();
-		$origin           = Forge_Admin_Suite_Settings::get_canonical_origin();
-		$general_links    = Forge_Admin_Suite_Settings::get_general_alternate_links();
-		$unique_links     = $this->get_unique_alternate_links_for_request();
-		$alternate_links  = $this->merge_alternate_links( $general_links, $unique_links );
+		$unique_rule         = $this->get_unique_rule_for_request();
+		$canonical_base_url  = Forge_Admin_Suite_Settings::get_canonical_origin();
+		$general_links       = Forge_Admin_Suite_Settings::get_general_alternate_links();
+		$unique_links        = $this->get_unique_alternate_links_for_request();
+		$alternate_links     = $this->merge_alternate_links( $general_links, $unique_links );
 
-		if ( ! $unique_rule && '' === $origin && empty( $alternate_links ) ) {
+		if ( ! $unique_rule && '' === $canonical_base_url && empty( $alternate_links ) ) {
 			echo $head_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			return;
 		}
 
-		echo $this->rewrite_head_links( $head_html, $origin, $unique_rule, $alternate_links ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->rewrite_head_links( $head_html, $canonical_base_url, $unique_rule, $alternate_links ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
@@ -100,15 +100,15 @@ final class Forge_Admin_Suite_General_Link_Tags {
 	 * Rewrite canonical and alternate tags in head HTML.
 	 *
 	 * @param string $head_html Head HTML.
-	 * @param string $origin Canonical origin.
+	 * @param string $canonical_base_url Canonical base URL.
 	 * @param array|null $unique_rule Unique canonical rule.
 	 * @param array $alternate_links Alternate link items.
 	 * @return string
 	 */
-	private function rewrite_head_links( $head_html, $origin, $unique_rule, $alternate_links ) {
+	private function rewrite_head_links( $head_html, $canonical_base_url, $unique_rule, $alternate_links ) {
 		$canonical_href = '';
 		$pattern        = '#<link\b[^>]*\brel=(["\'])canonical\1[^>]*>\s*#i';
-		$should_replace_canonical = ( $unique_rule || '' !== $origin );
+		$should_replace_canonical = ( $unique_rule || '' !== $canonical_base_url );
 
 		$match_result = preg_match_all( $pattern, $head_html, $matches );
 		if ( false === $match_result ) {
@@ -146,7 +146,7 @@ final class Forge_Admin_Suite_General_Link_Tags {
 					$unique_rule['preserveDefaultPath']
 				);
 			} else {
-				$new_canonical = $this->build_canonical_from_origin( $canonical_href, $origin );
+				$new_canonical = $this->build_canonical_from_base_url( $canonical_href, $canonical_base_url );
 			}
 
 			if ( '' !== $new_canonical ) {
@@ -233,33 +233,39 @@ final class Forge_Admin_Suite_General_Link_Tags {
 	}
 
 	/**
-	 * Replace scheme and host of a URL with the configured origin.
+	 * Build canonical URL from the configured general base URL.
 	 *
 	 * @param string $source_url Source URL.
-	 * @param string $origin Origin to inject.
+	 * @param string $base_url Canonical base URL.
 	 * @return string
 	 */
-	private function build_canonical_from_origin( $source_url, $origin ) {
-		$origin_parts = wp_parse_url( $origin );
-		if ( empty( $origin_parts['host'] ) ) {
+	private function build_canonical_from_base_url( $source_url, $base_url ) {
+		$base_parts = wp_parse_url( $base_url );
+		if ( empty( $base_parts['host'] ) || empty( $base_parts['scheme'] ) ) {
 			return '';
 		}
 
-		$source_parts = wp_parse_url( $source_url );
-		$path         = isset( $source_parts['path'] ) ? $source_parts['path'] : '';
-
-		if ( '' === $path ) {
-			$path = '/';
-		} elseif ( '/' !== $path[0] ) {
-			$path = '/' . ltrim( $path, '/' );
+		$base_origin = $base_parts['scheme'] . '://' . $base_parts['host'];
+		if ( isset( $base_parts['port'] ) ) {
+			$base_origin .= ':' . (int) $base_parts['port'];
 		}
+
+		$base_path = isset( $base_parts['path'] ) ? $base_parts['path'] : '/';
+		$base_path = '/' . ltrim( $base_path, '/' );
+
+		if ( '/' !== $base_path && '/' !== substr( $base_path, -1 ) ) {
+			$base_path .= '/';
+		}
+
+		$source_parts = wp_parse_url( $source_url );
+		$path         = $this->get_path_from_url( $source_url );
 
 		$query = '';
 		if ( isset( $source_parts['query'] ) && '' !== $source_parts['query'] ) {
 			$query = '?' . $source_parts['query'];
 		}
 
-		return untrailingslashit( $origin ) . $path . $query;
+		return $base_origin . $this->join_paths( $base_path, $path ) . $query;
 	}
 
 	/**

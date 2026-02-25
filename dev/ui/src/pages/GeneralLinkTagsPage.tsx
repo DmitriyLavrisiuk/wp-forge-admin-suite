@@ -284,7 +284,7 @@ export default function GeneralLinkTagsPage() {
     try {
       url = new URL(withScheme);
     } catch {
-      return { normalized: "", error: "Введите корректный домен." };
+      return { normalized: "", error: "Введите корректный URL." };
     }
 
     if (url.protocol !== "http:" && url.protocol !== "https:") {
@@ -312,9 +312,17 @@ export default function GeneralLinkTagsPage() {
       };
     }
 
+    let path = url.pathname || "/";
+    if (!path.startsWith("/")) {
+      path = `/${path}`;
+    }
+    if (!path.endsWith("/")) {
+      path = `${path}/`;
+    }
+
     const normalized = `${url.protocol}//${host}${
       url.port ? `:${url.port}` : ""
-    }`;
+    }${path}`;
 
     return { normalized, error: "" };
   };
@@ -488,16 +496,16 @@ export default function GeneralLinkTagsPage() {
         <CardHeader>
           <CardTitle>General Canonical Rules</CardTitle>
           <CardDescription>
-            Глобально заменяет домен в canonical URL на указанный. Путь и
-            параметры страницы сохраняются.
+            Глобально заменяет canonical URL на указанный base URL. При наличии
+            пути в base URL он будет использован как префикс.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="canonical-origin">Canonical domain</Label>
+            <Label htmlFor="canonical-origin">Canonical base URL</Label>
             <Input
               id="canonical-origin"
-              placeholder="https://newdomain.com"
+              placeholder="https://newdomain.com/en-in/"
               value={canonicalOrigin}
               onChange={(event) => {
                 const value = event.target.value;
@@ -510,9 +518,9 @@ export default function GeneralLinkTagsPage() {
               <p className="text-xs text-destructive">{originError}</p>
             ) : null}
             <p className="text-xs text-muted-foreground">
-              Сохраняется только схема и домен (опционально порт). Путь, query и
-              fragment остаются без изменений. Уникальные правила имеют
-              приоритет.
+              Допустим абсолютный URL с путём (например /en-in/). Путь текущей
+              страницы и query сохраняются, fragment из base URL отбрасывается.
+              Уникальные правила имеют приоритет.
             </p>
           </div>
           <div className="flex items-center gap-3">

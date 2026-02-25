@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.14
+- General canonical base URL now supports path prefix.
+
 ## 0.1.13
 - Rename Canonical modules to Link Tags modules (prep for alternate hreflang feature).
 - Added General Link Tags alternate (hreflang) links with global settings.
