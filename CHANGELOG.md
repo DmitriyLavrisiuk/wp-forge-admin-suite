@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.15
+- Fix Yoast og:locale for Polylang languages.
+
 ## 0.1.14
 - General canonical base URL now supports path prefix.
 

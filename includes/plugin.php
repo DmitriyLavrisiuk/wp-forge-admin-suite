@@ -14,6 +14,7 @@ require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/assets.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/settings.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/rest.php';
 require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/general-link-tags.php';
+require_once FORGE_ADMIN_SUITE_PLUGIN_PATH . 'includes/opengraph-locale.php';
 
 /**
  * Main plugin controller.
@@ -80,6 +81,29 @@ final class Forge_Admin_Suite_Plugin {
 		$this->assets->register();
 		$this->rest->register();
 		$this->general_link_tags->register();
+		add_action( 'wp', array( $this, 'register_opengraph_locale_filters' ), 0 );
+	}
+
+	/**
+	 * Register Open Graph locale filters for frontend requests.
+	 *
+	 * @return void
+	 */
+	public function register_opengraph_locale_filters() {
+		if ( is_admin() || is_feed() || is_embed() || wp_doing_ajax() || wp_doing_cron() ) {
+			return;
+		}
+
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return;
+		}
+
+		if ( function_exists( 'wp_is_json_request' ) && wp_is_json_request() ) {
+			return;
+		}
+
+		add_filter( 'wpseo_og_locale', 'forge_admin_suite_filter_wpseo_og_locale', 10, 2 );
+		add_filter( 'wpseo_locale', 'forge_admin_suite_filter_wpseo_locale', 10, 1 );
 	}
 
 	/**
